@@ -50,3 +50,30 @@ Interrupts can be classified into two main types:
   7. After completing the routine, the CPU **restores the saved context** and **returns to user mode**, resuming execution from the point of interruption or based on return value.
 
 > Note: Unlike hardware interrupts (which are asynchronous), software interrupts are **synchronous**, since they are triggered by the current instruction stream.
+
+# Hardware Protection
+
+Modern operating systems rely on hardware support to enforce protection between user programs and system resources. This ensures stability, security, and isolation.
+
+## Dual Mode Operation
+
+- The OS must ensure that **incorrect or malicious programs** cannot interfere with other programs or the operating system.
+- The **CPU executes instructions blindly**—it doesn't inherently know whether instructions come from user programs or the OS.
+- Therefore, hardware provides **dual modes** of operation:
+  - **User Mode**: Executes user-level code with restricted access to hardware resources.
+  - **Kernel Mode (Monitor Mode)**: Executes privileged instructions with full access to hardware.
+
+### How Dual Mode Works
+
+- A **mode bit** is maintained in hardware:
+  - `1` indicates **User Mode**
+  - `0` indicates **Kernel Mode**
+- When a user program makes a **system call**, the CPU switches from user mode to kernel mode (by setting the bit to `0`) and begins executing OS code.
+- Once the system call is completed, control returns to user mode.
+- Privileged instruction is only executed under kernel mode, so user need to use system call 
+
+## I/O Protection
+
+## Memory Protection
+
+## CPU Protection
