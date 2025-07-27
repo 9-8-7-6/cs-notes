@@ -55,7 +55,7 @@ Interrupts can be classified into two main types:
 
 Modern operating systems rely on hardware support to enforce protection between user programs and system resources. This ensures stability, security, and isolation.
 
-## Dual Mode Operation
+## 1. Dual Mode Operation
 
 - The OS must ensure that **incorrect or malicious programs** cannot interfere with other programs or the operating system.
 - The **CPU executes instructions blindly**—it doesn't inherently know whether instructions come from user programs or the OS.
@@ -63,17 +63,38 @@ Modern operating systems rely on hardware support to enforce protection between 
   - **User Mode**: Executes user-level code with restricted access to hardware resources.
   - **Kernel Mode (Monitor Mode)**: Executes privileged instructions with full access to hardware.
 
-### How Dual Mode Works
+- How Dual Mode Works
 
-- A **mode bit** is maintained in hardware:
-  - `1` indicates **User Mode**
-  - `0` indicates **Kernel Mode**
-- When a user program makes a **system call**, the CPU switches from user mode to kernel mode (by setting the bit to `0`) and begins executing OS code.
-- Once the system call is completed, control returns to user mode.
-- Privileged instruction is only executed under kernel mode, so user need to use system call 
+  - A **mode bit** is maintained in hardware:
+    - `1` indicates **User Mode**
+    - `0` indicates **Kernel Mode**
+  - When a user program makes a **system call**, the CPU switches from user mode to kernel mode (by setting the bit to `0`) and begins executing OS code.
+  - Once the system call is completed, control returns to user mode.
+  - Privileged instruction is only executed under kernel mode, so user need to use system call 
 
-## I/O Protection
+## 2. I/O Protection
 
-## Memory Protection
+## 3. Memory Protection
 
-## CPU Protection
+- Each program is allocated a specific range of memory it is allowed to access.
+- This range is defined by two special registers:
+  - **Base Register**: holds the starting address of the program's memory.
+  - **Limit Register**: specifies the size (or maximum offset) of the accessible memory region.
+- For any memory access to be valid, the following condition must be satisfied:
+  - If a program attempts to access memory outside this range, a **trap (exception)** occurs, which the operating system uses to prevent illegal access.
+  - These registers can only be modified using **privileged (kernel-mode) instructions**, not by user programs.
+  - Note: While `malloc` allocates memory within a program's address space, it **does not change base/limit registers**—those are set by the OS when the program is loaded.
+
+## 4. CPU Protection
+
+- The operating system must prevent user programs from **monopolizing the CPU** or **failing to return control**, which could happen due to:
+  - Infinite loops
+  - Programs never making system calls or yielding voluntarily
+
+- **Hardware Support: Timer (for time sharing)**
+  - A **timer** is initialized by the operating system before transferring control to a user program.
+  - The timer is **decremented on every clock tick**.
+  - When the timer reaches **zero**, it triggers a **hardware interrupt**.
+  - This interrupt forces the CPU to return control to the operating system, allowing it to schedule another process or take appropriate action.
+
+- This mechanism ensures **fair CPU allocation** among processes and prevents any one program from **hogging CPU resources indefinitely**.
