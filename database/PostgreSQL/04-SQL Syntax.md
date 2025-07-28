@@ -1,0 +1,31 @@
+# SQL Syntax
+
+## Lexical Structure
+- A command is terminated by a semicolon (;)
+- A dollar sign ($) followed by digits is used to:
+    - Represent a positional parameter in function definitions or prepared statements.
+    - In other contexts, $ can be part of:
+        - An identifier
+        - A dollar-quoted string constant
+- Parentheses (())
+    - Used to group expressions and enforce precedence.
+    - Sometimes required as part of the fixed syntax of certain SQL commands.
+- Brackets ([])
+    - Used to select elements from an array.
+- Commas (,)
+    - Used to separate elements in a list within various SQL constructs.
+- Semicolon (;)
+    - Used to terminate an SQL command
+    - Cannot appear inside a command, except in:
+        - A string constant
+        - A quoted identifier
+- Colon (:)
+    - Used to select slices from arrays (see Section 8.15).
+    - In some SQL dialects (e.g., Embedded SQL), used to prefix variable names.
+- Asterisk (*)
+    - Represents all fields of a table row or composite value.
+    - In aggregate functions (e.g., COUNT(*)), it denotes the aggregate has no explicit parameter.
+- Period (.)
+    - Used in:
+        - Numeric constants
+        - Separating schema, table, and column names
