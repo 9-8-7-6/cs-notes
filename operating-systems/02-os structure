@@ -1,0 +1,148 @@
+# OS-Structure
+
+## Operating System Services
+
+### 1. User Interface
+The OS provides different types of user interfaces:
+
+- **CLI (Command-Line Interface)**  
+  A text-based interface that allows users to interact with the system by typing commands.  
+  - *Shell*: A command-line interpreter program that executes user commands.
+
+- **GUI (Graphical User Interface)**  
+
+---
+
+### 2. Program Execution
+The OS loads programs into memory and executes them. It provides:
+- Process creation and termination
+- Memory allocation
+- Execution environment setup
+- Error handling during execution
+
+---
+
+### 3. I/O Operations
+The OS manages input and output by providing:
+- Interfaces to I/O devices
+- I/O buffering and scheduling
+- Permissions and control for device access
+
+---
+
+### 4. File-System Manipulation
+The OS allows programs and users to:
+- Create, delete, read, write, and manage files and directories
+- Set and manage access permissions
+- Navigate and organize file systems
+
+---
+
+### 5. Communication
+Inter-process communication (IPC) methods include:
+
+- **Message Passing**  
+  - Process A copies data into kernel space via a system call  
+  - Process B retrieves it from kernel space via another system call  
+  - Common in distributed systems
+
+- **Shared Memory**  
+  - A memory region is shared between processes  
+  - Requires system calls to create and manage  
+  - Faster but needs synchronization mechanisms
+
+---
+
+### 6. Error Detection
+The OS detects and responds to errors:
+- In hardware (e.g., memory failures)
+- In software (e.g., illegal operations)
+- Through logging, alerts, and safe shutdown mechanisms
+
+---
+
+### 7. Resource Allocation
+The OS allocates resources to processes such as:
+- CPU time
+- Memory
+- I/O devices
+- Files and network connections
+
+---
+
+### 8. Accounting
+The OS keeps records of:
+- CPU usage
+- Memory usage
+- Disk activity
+- User quotas and billing (in multi-user environments)
+
+---
+
+### 9. Protection and Security
+The OS enforces access control to protect:
+- Processes from each other
+- Users from unauthorized access
+- System integrity through authentication, permissions, and encryption
+
+
+## Difference between Api and System Call
+
+### System Call
+
+- Request OS services
+
+    - Process Control - abort,create, terminate process, allocate/free memory
+    - File management - create, delete, open, close file
+    - Device management - read, write, reposition device
+    - Information maintenance - get time or date
+    - Communication - send receive message
+
+
+- System Call
+    - The OS interface to programs(like a function)
+    - Request to kernel via **software interrupt**
+    - assembly language
+
+### API
+- Users mostly program against APIs instead of system call
+- Create for convenience
+- Common language libraby
+- APIs do not necessarily use system calls
+- An API call may use multiple system calls
+- Common APIs:
+    - **Win32 Api** for Windows
+    - **POSIX API** for POSIX-based system(UNIX, Linux, Mac OS X)
+    - **Java API** for java virtual machine 
+
+
+### The order of Api and System Call
+```markdown
+User Mode:
++------------------------+
+|   User Application     |
+|    calls open()        |
++------------------------+
+            |
+            v
++------------------------+
+|  System Call Interface |
++------------------------+
+
+Kernel Mode:
+            |
+            v
++--------------------------+
+|  System Call Table (i)   |
++--------------------------+
+            |
+            v
++-----------------------------------------+
+| open() Implementation in Kernel Space   |
++-----------------------------------------+
+            |
+            v
++--------------------------+
+|    Return to User App    |
++--------------------------+
+```
