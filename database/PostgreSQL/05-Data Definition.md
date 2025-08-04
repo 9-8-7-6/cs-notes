@@ -136,3 +136,105 @@ You can grant read access on the generated column without exposing the base colu
     - Generated columns are excluded from logical replication
 
     - Cannot be listed in CREATE PUBLICATION
+
+### Constraints
+
+A constraint is a rule defined on a column or a column restrict the data inserted or updated.
+
+#### Check Constraints
+
+- Check constraints allow you to specify the value in a certain column must satisfy a boolean expression
+
+```PostgreSQL
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CHECK (price > 0)
+);
+```
+
+- You can also give the constraint a separate name. This clarifies error messages and allows you to refer to the constraint when you need to change it.
+
+```PostgreSQL
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric CONSTRAINT positive_price CHECK (price > 0)
+);
+```
+
+#### Limitations of Check Constraints in PostgreSQL
+- Check constraints can only reference the current row.
+    - You cannot compare values against other rows or tables.
+    - While it might appear to work, it may lead to inconsistent data and restore failures after a database dump.
+    - Example failure: rows are restored in an order that violates the constraint.
+- Do not use CHECK for cross-row or cross-table logic.
+Use these instead:
+    - UNIQUE
+    - EXCLUDE
+    - FOREIGN KEY
+- If you only need to check other rows once at insertion time, use a custom trigger instead.
+Triggers are not enforced during a pg_dump restore, so they avoid related issues.
+- PostgreSQL assumes CHECK conditions are immutable:
+    - The result must always be the same for the same input row.
+    - If the check uses a user-defined function, and you later change that function’s logic:
+        - PostgreSQL will not re-validate existing rows.
+        - This may cause dump/restore errors due to now-invalid data.
+
+- Recommended process when changing function logic used in a CHECK constraint:
+
+```PostgreSQL
+ALTER TABLE your_table DROP CONSTRAINT your_check;
+-- Modify the function logic here
+ALTER TABLE your_table ADD CONSTRAINT your_check CHECK (...);
+```
+This ensures the constraint is re-evaluated across all rows.
+
+#### Not-Null Constraints
+
+> **NOT-NULL** constraint is equivalent to creating a **CHECK** but more efficient.
+
+```PostgreSQL
+CREATE TABLE products (
+    product_no integer NOT NULL,
+    name text NOT NULL,
+    price numeric NOT NULL CHECK (price > 0)
+);
+```
+
+#### Unique Constraints
+
+> Data in column **only** is unique among all rows in the table.
+
+```PostgreSQL
+CREATE TABLE products (
+    product_no integer,
+    name text,
+    price numeric,
+    UNIQUE (product_no)
+);
+```
+
+#### Primary Keys
+
+> This requires values be both **unique** and **not null**
+
+```PostgreSQL
+CREATE TABLE products (
+    product_no integer UNIQUE NOT NULL,
+    name text,
+    price numeric
+);
+
+CREATE TABLE products (
+    product_no integer PRIMARY KEY,
+    name text,
+    price numeric
+);
+```
+
+- Primary key will automatically create an unique B-tree index
+
+#### Foreign Keys
+
+> A foreign key is a column or a set of columns in one table that establishes a link to the primary key of another table, enforcing referential integrity between the two tables.
