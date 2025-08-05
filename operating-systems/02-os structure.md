@@ -108,7 +108,7 @@ The OS enforces access control to protect:
 - Users mostly program against APIs instead of system call
 - Create for convenience
 - Common language libraby
-- APIs do not necessarily use system calls
+- Not all API calls involve system calls; some are implemented entirely in user space
 - An API call may use multiple system calls
 - Common APIs:
     - **Win32 Api** for Windows
@@ -146,3 +146,50 @@ Kernel Mode:
 |    Return to User App    |
 +--------------------------+
 ```
+
+### Layered OS
+- A Layered Operating System is structured as a hierarchy of layers, each built on top of the lower one.
+
+#### Key Features:
+- Each layer only interacts with the layer directly below it.
+- Simplifies debugging and maintenance due to modular design.
+- Lower layers provide core functionalities; higher layers provide more abstract services.
+
+### Microkernel OS
+- Move as much from kernel into "user" space, leave most important in kernel
+
+- Communication by message passing
+
+### Modular OS
+- All in kernel modules
+- Uses object-oriented approach
+
+### Virtual Machine
+- layered approach to treat hardware and operating system kernel as they were all hardware
+
+- The guest OS inside the VM executes privileged instructions, but it is actually running in user mode
+  - When the guest OS executes a privileged instruction:
+    - The virtual machine monitor (VMM) or hypervisor intercepts it.
+    - The interrupt or exception is caught by the underlying host OS or hypervisor.
+    - The hypervisor emulates the behavior of the hardware for the VM.
+    - The instruction is then re-executed or handled in a controlled way to maintain isolation and security.
+
+#### Critical Instruction
+- Critical instructions are those that behave differently in user mode and kernel mode
+
+#### Feature
+- Provides complete protection of system resources
+- Provides a way to solve system compatibility problems
+- Provides an environment for research and development
+- Increase resources utilization in cloud computing
+
+#### Category
+- Full Virtualization (e.g., VMware, VirtualBox)
+  - Emulates the entire hardware stack, allowing unmodified guest OSes to run.
+  - Requires hardware support (e.g., Intel VT-x, AMD-V) or binary translation.
+- Paravirtualization (e.g., Xen)
+  - The guest OS is modified to be aware of virtualization, reducing overhead.
+  - Relies on hypercalls instead of trapping all privileged instructions.
+- Process-level Virtualization (e.g., Java Virtual Machine)
+  - Provides a virtual runtime environment for executing programs in a specific language.
+  - Does not virtualize hardware, but abstracts the operating system and CPU for portability.
