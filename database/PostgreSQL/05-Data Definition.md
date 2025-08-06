@@ -238,3 +238,22 @@ CREATE TABLE products (
 #### Foreign Keys
 
 > A foreign key is a column or a set of columns in one table that establishes a link to the primary key of another table, enforcing referential integrity between the two tables.
+
+### System Columns
+
+> Every table has several system columns that are implicitly defined by the system.
+
+- tableoid
+    - **tableoid** is a built-in system column that returns the OID of the table from which each row was read.
+- xmin
+    - The transaction ID (XID) of the transaction that inserted the row
+- cmin
+    - The command ID within the inserting transaction
+- xmax
+    - The transaction ID of the transaction that deleted or invalidated the row
+- cmax
+    - The command ID within the deleting transaction
+- ctid
+    - The physical location of the row within its table as a (block, offset) tuple.
+
+
