@@ -11,9 +11,6 @@
 ### Operating System
 - Notes from the [Operating System open course](https://youtube.com/playlist?list=PLS0SUwlYe8cxj8FCPRoPHAehIiN9Vo6VZ&si=nDMe61Th6inCspb3)  by Prof. 周志遠 (National Tsing Hua University).
 
-### Rust
-- Notes taken while reading source code of [Rust Language Repository](https://github.com/rust-lang/rust).
-
 ---
 
 ## Disclaimer
