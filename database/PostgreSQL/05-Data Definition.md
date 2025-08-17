@@ -295,5 +295,39 @@ CREATE TABLE products (
 
 ### Privileges
 
-> Object is assigned to the role created it as owner normally.To allow other roles to use it, *privileges* must be granted.
+#### Object is assigned to the role created it as owner normally.To allow other roles to use it, *privileges* must be granted.
 
+> Assign a new owner
+
+```sql
+ALTER TABLE table_name OWNER TO new_owner;
+```
+
+> Assign privileges
+
+```sql
+GRANT UPDATE ON accounts TO joe;
+```
+
+> Revoke previously-granted privilege(Unto)
+
+```sql
+REVOKE ALL ON accounts FROM PUBLIC;
+```
+
+#### Available privileges
+* SELECT
+* INSERT
+* UPDATE
+* DELETE
+* TRUNCATE
+* REFERENCES
+* TRIGGER
+* CREATE
+* CONNECT
+* TEMPORARY
+* EXECUTE
+* USAGE
+* SET
+* ALTER SYSTEM
+* MAINTAIN
