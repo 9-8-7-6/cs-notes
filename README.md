@@ -11,6 +11,10 @@
 ### Operating System
 - Notes from the [Operating System open course](https://youtube.com/playlist?list=PLS0SUwlYe8cxj8FCPRoPHAehIiN9Vo6VZ&si=nDMe61Th6inCspb3)  by Prof. 周志遠 (National Tsing Hua University).
 
+### Development-Notes
+#### Testing(Integration test & Unit test & System test)
+#### CICD
+
 ---
 
 ## Disclaimer
