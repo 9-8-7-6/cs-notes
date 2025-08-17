@@ -105,5 +105,9 @@
     - Need to establish a communication link
     - Exchange a message by send/receive 
     - Direct / Indirect communication
+        - Direct: need to name the target to send or receive, One-to-One relation
+        - Indirect: Messages are from mailboxes(alse as ports)
     - Symmetric / Assymmetric communication
     - Blocking / Non-blocking
+        - blocking(synchronous)
+        - non-blocking(asynchronous)
