@@ -257,3 +257,43 @@ CREATE TABLE products (
     - The physical location of the row within its table as a (block, offset) tuple.
 
 
+### Modifying Tables
+
+#### Add columns
+
+> ALTER TABLE `products` ADD COLUMN `description` text;
+
+> ALTER TABLE `products` ADD COLUMN description `text` CHECK (description <> '');
+
+#### Remove columns
+
+> ALTER TABLE `products` DROP COLUMN `description`;
+
+#### Add constraints
+
+> ALTER TABLE `products` ADD CHECK (name <> '');
+
+#### Remove constraints
+
+> ALTER TABLE products DROP CONSTRAINT some_name;
+
+#### Change default values
+
+> ALTER TABLE `products` ALTER COLUMN `price` SET DEFAULT `7.77`;
+
+#### Change column data types
+
+> ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
+
+#### Rename columns
+
+> ALTER TABLE products RENAME COLUMN product_no TO product_number;
+
+#### Rename tables
+
+> ALTER TABLE products RENAME TO items;
+
+### Privileges
+
+> Object is assigned to the role created it as owner normally.To allow other roles to use it, *privileges* must be granted.
+
