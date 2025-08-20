@@ -18,6 +18,25 @@
 4. **Capability Exchange**  
    - Both peers exchange supported **media formats** and **security parameters** to ensure compatibility and end-to-end encryption.  
 
+## Concept
+* Network Address Translation(NAT)
+   * If target is not under same subnet, can't connect directly
+   * Gateway create a **NAT table** ![](https://d2cest1yk6hx2d.cloudfront.net/uninets-001/store/3057/article%20images/network-address-translation-table.jpg)
+   * NAT Translations Method
+      * One to One NAT(Static NAT)
+         * Port on the router always maps to internal IP(fixed mapping)
+      * Address restricted NAT
+         * Allowed to receive only if the internal host has sent first(matching IP only)
+      * Port restricted NAT
+         * Allowed to receive only if the internal host has sent first (matching IP + Port)
+      * Symmetric NAT
+         * Allowed to receive only if the full 4-tuple (Internal IP, Internal Port → Target IP, Target Port) matches
+         * Mapping is unique per destination, cannot be reused for different targets
+* STUN & TURN
+* ICE
+* SDP
+* Signaling the SDP
+
 ## Summary
 - WebRTC focuses on **real-time, secure, peer-to-peer communication**.
 - The signaling mechanism is **application-defined**, not part of WebRTC itself.
