@@ -7,7 +7,7 @@ The OS provides different types of user interfaces:
 
 - **CLI (Command-Line Interface)**  
   A text-based interface that allows users to interact with the system by typing commands.  
-  - *Shell*: A command-line interpreter program that executes user commands.
+  *Shell*: A command-line interpreter program that executes user commands.
 
 - **GUI (Graphical User Interface)**  
 
@@ -24,9 +24,9 @@ The OS loads programs into memory and executes them. It provides:
 
 ### 3. I/O Operations
 The OS manages input and output by providing:
-- Interfaces to I/O devices
-- I/O buffering and scheduling
-- Permissions and control for device access
+* Interfaces to I/O devices
+* I/O buffering and scheduling
+* Permissions and control for device access
 
 ---
 
@@ -55,9 +55,8 @@ Inter-process communication (IPC) methods include:
 
 ### 6. Error Detection
 The OS detects and responds to errors:
-- In hardware (e.g., memory failures)
-- In software (e.g., illegal operations)
-- Through logging, alerts, and safe shutdown mechanisms
+- Hardware (e.g., memory failures)
+- Software (e.g., illegal operations)
 
 ---
 
@@ -75,7 +74,7 @@ The OS keeps records of:
 - CPU usage
 - Memory usage
 - Disk activity
-- User quotas and billing (in multi-user environments)
+- Resource usage and billing (in multi-user environments)
 
 ---
 
@@ -90,23 +89,20 @@ The OS enforces access control to protect:
 
 ### System Call
 
-- Request OS services
-
-    - Process Control - abort,create, terminate process, allocate/free memory
-    - File management - create, delete, open, close file
-    - Device management - read, write, reposition device
-    - Information maintenance - get time or date
+- Services
+    - Process Control : abort,create, terminate process, allocate/free memory
+    - File management : create, delete, open, close file
+    - Device management : read, write, reposition device
     - Communication - send receive message
 
 
-- System Call
-    - The OS interface to programs(like a function)
-    - Request to kernel via **software interrupt**
-    - assembly language
+- How System Call was called
+    - User program calls the OS API
+    - The API translates the request into a system call
+    - CPU executes a software interrupt to switch from **user mode** to **kernel mode**
 
 ### API
-- Users mostly program against APIs instead of system call
-- Create for convenience
+- Users mostly program with APIs instead of system call
 - Common language libraby
 - Not all API calls involve system calls; some are implemented entirely in user space
 - An API call may use multiple system calls
@@ -118,7 +114,7 @@ The OS enforces access control to protect:
 
 ### The order of Api and System Call
 ```markdown
-User Mode:
+        User Mode:
 +------------------------+
 |   User Application     |
 |    calls open()        |
@@ -129,7 +125,7 @@ User Mode:
 |  System Call Interface |
 +------------------------+
 
-Kernel Mode:
+      Kernel Mode:
             |
             v
 +--------------------------+
@@ -148,7 +144,7 @@ Kernel Mode:
 ```
 
 ### Layered OS
-- A Layered Operating System is structured as a hierarchy of layers, each built on top of the lower one.
+> A Layered Operating System is structured as a hierarchy of layers, each built on top of the lower one.
 
 #### Key Features:
 - Each layer only interacts with the layer directly below it.
@@ -156,7 +152,7 @@ Kernel Mode:
 - Lower layers provide core functionalities; higher layers provide more abstract services.
 
 ### Microkernel OS
-- Move as much from kernel into "user" space, leave most important in kernel
+- Leave most important in kernel, move others from kernel into **user space**
 
 - Communication by message passing
 
@@ -164,26 +160,36 @@ Kernel Mode:
 - All in kernel modules
 - Uses object-oriented approach
 
-### Virtual Machine
-- layered approach to treat hardware and operating system kernel as they were all hardware
+## Virtual Machine
 
-- The guest OS inside the VM executes privileged instructions, but it is actually running in user mode
-  - When the guest OS executes a privileged instruction:
-    - The virtual machine monitor (VMM) or hypervisor intercepts it.
-    - The interrupt or exception is caught by the underlying host OS or hypervisor.
-    - The hypervisor emulates the behavior of the hardware for the VM.
-    - The instruction is then re-executed or handled in a controlled way to maintain isolation and security.
+### Concept
+- A layered approach to treat hardware and operating system kernel as they were all hardware
+- The guest OS inside the VM thinks it runs in kernel mode, but actually runs in user mode.
 
-#### Critical Instruction
+---
+
+### How Privileged Instructions Are Handled
+1. The guest OS inside the VM executes privileged instructions(in user mode)
+2. The virtual machine monitor (VMM) or hypervisor intercepts it
+3. The interrupt/exception(trap) is detected by the host OS or hypervisor.
+4. The hypervisor fakes(emulates) the behavior of the hardware for the VM.
+5. The instruction is then re-executed or handled safely,maintaining isolation and security.
+
+---
+
+### Critical Instruction
 - Critical instructions are those that behave differently in user mode and kernel mode
 
-#### Feature
+---
+
+### Feature
 - Provides complete protection of system resources
 - Provides a way to solve system compatibility problems
 - Provides an environment for research and development
 - Increase resources utilization in cloud computing
 
-#### Category
+--- 
+### Category
 - Full Virtualization (e.g., VMware, VirtualBox)
   - Emulates the entire hardware stack, allowing unmodified guest OSes to run.
   - Requires hardware support (e.g., Intel VT-x, AMD-V) or binary translation.

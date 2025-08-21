@@ -1,9 +1,9 @@
-# Lecture 01: Introduction to Operating Systems
+# Introduction to Operating Systems
 
 ## I/O Communication Basics
 
-- There is a **passive controller** between the device and memory to handle communication, due to the large speed difference between them.
-- The **CPU issues commands**, after which **data is transferred** to the **controller's buffer**, and then written back to memory.
+- There is a **passive** controller between the device and memory to handle communication to deal with the large speed difference between them.
+- The **CPU launches commands** to the controller, after **data is transferred** to the **controller's buffer**, and then written back to memory.
 
 ## Legacy I/O Mechanism: Busy Waiting
 
@@ -21,13 +21,11 @@
 Interrupts can be classified into two main types:
 
 ### Hardware Interrupts
-
 - Triggered by external hardware devices (e.g., keyboard, disk, network interface).
 - Also referred to as **signals** in hardware contexts.
 - Commonly used for asynchronous notifications to the CPU.
 
 ### Software Interrupts
-
 - Triggered intentionally by programs during execution.
 - Common cases include:
   - **Errors**, such as division by zero or illegal memory access.
@@ -51,6 +49,8 @@ Interrupts can be classified into two main types:
 
 > Note: Unlike hardware interrupts (which are asynchronous), software interrupts are **synchronous**, since they are triggered by the current instruction stream.
 
+---
+
 # Hardware Protection
 
 Modern operating systems rely on hardware support to enforce protection between user programs and system resources. This ensures stability, security, and isolation.
@@ -63,14 +63,13 @@ Modern operating systems rely on hardware support to enforce protection between 
   - **User Mode**: Executes user-level code with restricted access to hardware resources.
   - **Kernel Mode (Monitor Mode)**: Executes privileged instructions with full access to hardware.
 
-- How Dual Mode Works
-
-  - A **mode bit** is maintained in hardware:
-    - `1` indicates **User Mode**
-    - `0` indicates **Kernel Mode**
-  - When a user program makes a **system call**, the CPU switches from user mode to kernel mode (by setting the bit to `0`) and begins executing OS code.
-  - Once the system call is completed, control returns to user mode.
-  - Privileged instruction is only executed under kernel mode, so user need to use system call 
+### How Dual Mode Works
+- A **mode bit** is maintained in hardware:
+  - `1` indicates **User Mode**
+  - `0` indicates **Kernel Mode**
+- When a user program makes a **system call**, the CPU switches from user mode to kernel mode (by setting the bit to `0`) and begins executing OS code.
+- Once the system call is completed, control returns to user mode.
+- Privileged instructions are only executed under kernel mode, so users must use **system calls**.
 
 ## 2. I/O Protection
 
@@ -86,15 +85,14 @@ Modern operating systems rely on hardware support to enforce protection between 
   - Note: While `malloc` allocates memory within a program's address space, it **does not change base/limit registers**—those are set by the OS when the program is loaded.
 
 ## 4. CPU Protection
-
 - The operating system must prevent user programs from **monopolizing the CPU** or **failing to return control**, which could happen due to:
   - Infinite loops
   - Programs never making system calls or yielding voluntarily
 
-- **Hardware Support: Timer (for time sharing)**
-  - A **timer** is initialized by the operating system before transferring control to a user program.
-  - The timer is **decremented on every clock tick**.
-  - When the timer reaches **zero**, it triggers a **hardware interrupt**.
-  - This interrupt forces the CPU to return control to the operating system, allowing it to schedule another process or take appropriate action.
+### Hardware Support: Timer (for time sharing)
+- A **timer** is initialized by the operating system before transferring control to a user program.
+- The timer is **decremented on every clock tick**.
+- When the timer reaches **zero**, it triggers a **hardware interrupt**.
+- This interrupt forces the CPU to return control to the operating system, allowing it to schedule another process or take appropriate action.
 
 - This mechanism ensures **fair CPU allocation** among processes and prevents any one program from **hogging CPU resources indefinitely**.

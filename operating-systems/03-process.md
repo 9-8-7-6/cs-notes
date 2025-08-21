@@ -1,113 +1,154 @@
 # Process Concept
-  
-## Process Concept
-### Program vs. Process
-- **Program** - *passive*:binary stored in disk
-- **Process** - *active*:program executed in memory
+
+## Program vs. Process
+- **Program** – *passive*: binary stored on disk
+- **Process** – *active*: program executed in memory
 
 ![Process Concept Diagram](https://cdn-images-1.medium.com/max/900/1*6vsoP1cWzQkN95AlEt2WoA.jpeg)
- 
-### Components of a Process
-- Code Segment(text section)
-- Data Section(global variables)
-- Stack(temporary local variable and function)
-- Heap (dynamically allocated memory such as malloc / new objects)
-- Program counter(register to store the address of next instruction to execute)
-- A set of associated resource(e.g open file handler)
 
-### Threads(A.k.a lightweight process)
-- Thread and process management are similar, so this chapter focuses mainly on processes
-- Basic unit of CPU utilization
-- All threads belong to the same process share(code section, data section, OS resources)
+---
 
-### Process State(Virtual Concept)
+## Components of a Process
+- **Code Segment (Text Section)** – program instructions  
+- **Data Section** – global variables  
+- **Stack** – temporary local variables, function calls  
+- **Heap** – dynamically allocated memory (e.g., `malloc`, `new`)  
+- **Program Counter (PC)** – register storing the address of the next instruction  
+- **Resources** – e.g., open file handlers, I/O devices  
+
+---
+
+## Threads (Lightweight Processes)
+- A **thread** is the basic unit of CPU utilization.  
+- All threads of the same process share:
+  - Code section  
+  - Data section  
+  - OS resources  
+- Thread and process management are similar, but this chapter focuses on **processes**.  
+
+---
+
+## Process State (Virtual Concept)
 ![Process State Diagram](https://i.imgur.com/vD7tDw5.png)
-- New:The process is being created(that is program loaded in memory and not yet ready to run, but not always fully loaded yet)
-- Ready:The process is in the memory waiting queue to be assigned to processor(CPU)
-- Running:Instructions are being executed by CPU
-- Waiting:Process is waiting for an event to complete (e.g., I/O operation)
-- Terminated:The process has finished, free the memory
 
-### Process Control Block(PCB)
+- **New**: Process is being created (loaded into memory but not yet running).  
+- **Ready**: Process is in memory, waiting in the queue to be assigned to the CPU.  
+- **Running**: Instructions are being executed by the CPU.  
+- **Waiting**: Process is waiting for an event (e.g., I/O completion).  
+- **Terminated**: Process has finished execution, memory is freed.  
+
+---
+
+## Process Control Block (PCB)
 ![Process Control Block](https://cdn1.byjus.com/wp-content/uploads/2022/06/process-control-block.png)
 
-- stores the current [Process State](#process-statevirtual-concept)
-- The OS creates a PCB entry for each new process.
-- feature: Store process information in memory
+- Stores the **current process state**.  
+- The OS creates a PCB entry for **each process**.  
+- Features:
+  - Holds process information (state, PC, registers, memory limits, etc.).  
 
-### Context Switch
-- Switch process executed by CPU
-- Occur when interrupt or system call(e.g mouse or keyboard) happen 
-- That is store the state of process into process control block and load the saved state of new process
+---
 
+## Context Switch
+- Switching the CPU from one process to another.  
+- Triggered by:
+  - **Interrupts** (e.g., I/O completion)  
+  - **System calls** (e.g., keyboard/mouse events)  
+- Steps:
+  1. Save the current process state into its PCB.  
+  2. Load the state of the next scheduled process.  
 
-## Process Scheduling
-- Multiprogramming: running several programs at the same time to use the computer more efficiently
-- Time Sharing:context switch frequently such that user can **interact** with computer
+---
 
-### Process Schedule Queues
-> Processes migrate between various queues
+# Process Scheduling
 
-- Job queue(New State)
-- Ready queue(Ready State)
-- Device queue(Wait State)
+## Multiprogramming
+- Running several programs at the same time to improve CPU utilization.
 
-### Schedulers
-- Short-term scheduler(CPU scheduler):*frequently* Memory to CPU(Ready State -> Run State)
-- Long-term scheduler(job scheduler):Disk to Memory(New State -> Ready State)
-- Medium-term scheduler:
-    - swap out: Memory to Disk(Ready State -> Wait State), removing processes from memory to reduce the degree of multiprogramming, **Virtual Memory** related
-    - swap in: reintroducing swap-out processes into memory
+## Time Sharing
+- Frequent **context switches** so users can interact with the computer.
+
+## Process Scheduling Queues
+> Processes migrate between different scheduling queues.
+
+- **Job Queue** – contains all new processes.  
+- **Ready Queue** – processes waiting for CPU.  
+- **Device Queue** – processes waiting for I/O devices.  
+
+## Types of Schedulers
+- **Short-term Scheduler (CPU Scheduler)**  
+  - Frequently selects processes from **Ready → Running**.  
+- **Long-term Scheduler (Job Scheduler)**  
+  - Decides which jobs are loaded into memory from disk (**New → Ready**).  
+- **Medium-term Scheduler**  
+  - Performs **swapping**:
+    - **Swap out**: Move processes from memory to disk (reduce degree of multiprogramming).  
+    - **Swap in**: Reload swapped-out processes into memory.  
+  - Related to **virtual memory management**.  
 
 ![Schedulers](https://afteracademy.com/images/what-is-longterm-shortterm-and-mediumterm-scheduler-longterm-shortterm-working.png)
 
-## Operations on Processes
+---
 
-### Tree of Processes
-- Each process is identified by a unique processor identifier(pid), and is in tree structure(parent and children relation)
+# Operations on Processes
 
-### Resource Creation
-- Resource sharing
-    - Parent and child processes share all resources
-    - Child process share *subset* of parent's resources
-    - Parent and child process share *no* resources
-- Memory content
-    - Child duplicate of parent
-    - Child has a program loaded into it 
-- UNIX/Linux Process Creation
-    - *Fork* system call
-        - Create a duplicated of its parent
-        - Child & Parent execute concurrently
-        - Childs return a value 0, Parents return PID
-    - *Execlp* system call
-        - Load new binary code into memory 
-    - *Wait* system call
-        - Parent waits for one of its child process to complete
-- Process Termination
-    - Terminate when the last statement is executed or exit() is called
-    - Parent may terminate children
-## Interprocess Communication(IPC)
-> a set of methods for exchanging data among multiple threads in one or more processes
+## Tree of Processes
+- Each process has a **unique process identifier (PID)**.  
+- Processes form a **parent–child hierarchy** (tree structure).  
 
-- Shared memory
-    - Require more careful user *synchronization*, and make sure data are not written simultaneously by processes
-    - Faster speed by memory address access
-    - Processes create a region of shared memory by system call and attach to os
-    - Consumer & Producer Problem:
+## Resource Creation
+- **Resource Sharing Models**:  
+  - Parent and child share **all resources**.  
+  - Child shares a **subset** of parent resources.  
+  - Parent and child share **no resources**.  
 
-- Message passing
-    - more efficient for *small* data
-    - Send/Receive message
-    - Communication Methods
-        - Sockets: network connection by IP & Port, exchange unstructured stream of bytes
-        - Remote Procedure Calls: Call another process or computer's function
-    - Mechanism for processes to communicate and synchronize their actions
-    - Need to establish a communication link
-    - Exchange a message by send/receive 
-    - Direct / Indirect communication
-        - Direct: need to name the target to send or receive, One-to-One relation
-        - Indirect: Messages are from mailboxes(alse as ports)
-    - Symmetric / Assymmetric communication
-    - Blocking / Non-blocking
-        - blocking(synchronous)
-        - non-blocking(asynchronous)
+- **Memory Content**:  
+  - Child is a **duplicate** of the parent.  
+  - Or child has a **new program loaded** into it.  
+
+### UNIX/Linux Process Creation
+- **fork()** system call  
+  - Creates a duplicate of parent.  
+  - Parent and child execute concurrently.  
+  - Child returns **0**, Parent returns **PID** of child.  
+
+- **execlp()** system call  
+  - Loads a new binary into process memory space.  
+
+- **wait()** system call  
+  - Parent waits for one of its children to complete.  
+
+### Process Termination
+- A process terminates when:
+  - Last statement is executed  
+  - Or `exit()` system call is invoked  
+- Parent may also terminate its children.  
+
+---
+
+# Interprocess Communication (IPC)
+> Mechanisms for processes to exchange data and synchronize.
+
+## Shared Memory
+- Processes establish a shared memory region via a **system call**.  
+- Requires **synchronization** to avoid race conditions.  
+- Faster (direct memory access).  
+- Example problem: **Producer–Consumer Problem**.  
+
+## Message Passing
+- More efficient for **small data** exchange.  
+- Communication via **send/receive messages**.  
+
+### Communication Methods
+- **Sockets**: Network communication via IP & port (unstructured byte streams).  
+- **Remote Procedure Calls (RPCs)**: Invoke functions across processes/machines.  
+
+### Features
+- Processes must establish a **communication link**.  
+- Exchange messages via **send/receive** operations.  
+- Supports different modes:  
+  - **Direct** vs. **Indirect** (via mailbox/port)  
+  - **Symmetric** vs. **Asymmetric**  
+  - **Blocking (synchronous)** vs. **Non-blocking (asynchronous)**  
+
+---
