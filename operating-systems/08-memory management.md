@@ -2,7 +2,9 @@
 ## Background
 - Main memory and registers are the only storage CPU can access directly
 - Multiple programs are brought into memory to improve performance and utilization
-- A process may be moved between disk and memory(Virtual memory)
+- A process can be moved between disk and memory by Virtual memory
+
+---
 
 ## Multistep Processing of a User Program
 
@@ -12,9 +14,11 @@
 
 ### Load Time: load into memory, include static loading
 
-### Execution Time(run time): include dynamically loaded and linking
+### Execution Time(run time): include dynamically loading and linking
 
 ![Multistep Processing of a User Program](https://media.geeksforgeeks.org/wp-content/uploads/20200531135539/1406-5.png)
+
+---
 
 ## Address Binding
 ### Address binding - Compile Time
@@ -40,9 +44,77 @@
 ![Address binding - Execution Time](
 https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
 
-## Swaping
+## Dynamic/Stating Loading & Linking
+### Dynamic Loading
+* A routine(function call) is loaded into memory when it is called
+* Better memory-space utilization
+    * unused routine is never loaded
+    * useful when large amounts of code are infrequently used
+### Static Linking
+* Libraries are combined by the **loader** into the program in memory
+* Different programs may each contain duplicated copies of the same library
 
-## Contiguous Allocation
-## Paging
+---
+
+## Swapping
+* Move process between disk and memory
+* A special disk area provides direct access for swapping, separated from the regular file system
+* The speed is slow when moving, so it's important to calculate which data to be moved
+### Why Swap a process:
+- Free up memory
+- Swap lower-priority process
+
+| Binding time| Swap back memory space |
+|---------------------|----------------------------|
+| Compile-time binding| Must be the *same*         |
+| Runtime binding     | Can be *different*         |
+
+### Process to be swapped **must be idle**
+
+---
+
+## Memory Allocation
+- Contiguous Allocation
+    - Fixed-partition allocation
+        - Each process loads into one fixed-size space
+        ![](https://media.geeksforgeeks.org/wp-content/uploads/20200515204405/fixedpartition.png)
+    - Variable-size partition 
+        - Hole: block of contiguous free memory
+        ![](https://files.codingninjas.in/article_images/variable-size-partitioning-0-1641800237.webp)
+
+        - Dynamic Storage Allocation algorithm
+            - First-fit: allocate the **first** hole that fits
+            - Best-fit: allocate the **smallest** hole that fit
+            - Worst-fit allocate the **largest** hole that fit
+
+### Fragmentation
+> Left space when variable-size partition
+
+* External fragmentation
+    - Memory space left is not large enough to load the program, even if total free memory is bigger than the required
+    - Occur in **variable-size allocation**
+
+* Internal fragmentation
+    - Memory space allocated is not fully utilized, leaving some part unused
+    - Occurs in **fixed-partition allocation** when the allocated partition is larger than the actual process requirement
+
+* Solution: compaction
+    - Shuffle all the memory content to place all memory together into a large block in **execution time**
+---
+
+## Paging(Non-Contiguous Memory Allocation)
+- Method:
+1. **Frames**: divide **physical memory** into fixed-size block
+2. **Pages**: divide **logical address space(program)** into fixed-size block 
+- The number of **free pages** must at least equal to free **frames**
+
+- Benefit:
+    1. Avoid external fragmentation
+    2. Limited internal fragmentation by making page size smaller
+
+### Page Table
+Maintained by OS for each process
+![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH6ttm1sus7BGQO2R_FcEjEta8s0dMDEdpDw&s)
+
 ## Segmentation
 ## Segmentation with Paging
