@@ -2,9 +2,7 @@
 ## Background
 - Main memory and registers are the only storage CPU can access directly
 - Multiple programs are brought into memory to improve performance and utilization
-- A process can be moved between disk and memory by Virtual memory
-
----
+- A process can be moved between disk and memory using virtual memory
 
 ## Multistep Processing of a User Program
 
@@ -18,12 +16,10 @@
 
 ![Multistep Processing of a User Program](https://media.geeksforgeeks.org/wp-content/uploads/20200531135539/1406-5.png)
 
----
-
 ## Address Binding
 ### Address binding - Compile Time
 - Very fast
-- ES-DOS .COM format binary
+- MS-DOS .COM format binary
 - Hard to move program, need to recompile and re-execute
 ![Address binding - Compile Time](https://miro.medium.com/v2/resize:fit:961/1*xYWARMqUFil-5c2fPzKj3w.png)
 
@@ -44,7 +40,7 @@
 ![Address binding - Execution Time](
 https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
 
-## Dynamic/Stating Loading & Linking
+## Dynamic/Static Loading & Linking
 ### Dynamic Loading
 * A routine(function call) is loaded into memory when it is called
 * Better memory-space utilization
@@ -53,8 +49,6 @@ https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
 ### Static Linking
 * Libraries are combined by the **loader** into the program in memory
 * Different programs may each contain duplicated copies of the same library
-
----
 
 ## Swapping
 * Move process between disk and memory
@@ -71,7 +65,6 @@ https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
 
 ### Process to be swapped **must be idle**
 
----
 
 ## Memory Allocation
 - Contiguous Allocation
@@ -88,7 +81,7 @@ https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
             - Worst-fit allocate the **largest** hole that fit
 
 ### Fragmentation
-> Left space when variable-size partition
+> Left space unused when variable-size partition
 
 * External fragmentation
     - Memory space left is not large enough to load the program, even if total free memory is bigger than the required
@@ -100,21 +93,156 @@ https://miro.medium.com/v2/resize:fit:1400/1*U4GXeIKBETi52HQMJWOvPQ.png)
 
 * Solution: compaction
     - Shuffle all the memory content to place all memory together into a large block in **execution time**
----
 
 ## Paging(Non-Contiguous Memory Allocation)
 - Method:
 1. **Frames**: divide **physical memory** into fixed-size block
 2. **Pages**: divide **logical address space(program)** into fixed-size block 
-- The number of **free pages** must at least equal to free **frames**
+
+> The number of **free pages** must at least equal the number of free **frames**.
 
 - Benefit:
     1. Avoid external fragmentation
-    2. Limited internal fragmentation by making page size smaller
+    2. Reduces **internal fragmentation** by making page size smaller, page size commonly be 4KB / 8KB, but modern systems may support larger page size
 
 ### Page Table
-Maintained by OS for each process
-![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH6ttm1sus7BGQO2R_FcEjEta8s0dMDEdpDw&s)
+
+> **Purpose**: Translate logical addresses into physical addresses.
+
+- A **logical address** is composed of:
+  - **Page number (p)**:  
+    - Index into the page table which provide the base address of each page in physical memory.  
+    - If page number uses **N bits**, then:  
+      - A process can have at most **2ⁿ pages**.  
+      - Maximum allocatable memory = **2ⁿ × page size**.
+  - **Page offset (d)**: Position within the page.  
+- Physical address = page **base address** + page **offset**
+
+#### Example
+
+```yaml
+Virtual address = 0x1234
+
+0x1234 (HEX) = 0001 0010 0011 0100 (Binary, 16 bits)
+
+Page number = 0001 (high 4 bits) = 1
+Page offset = 0010 0011 0100 (low 12 bits) = 0x234
+
+=> Address belongs to logical page 1, offset 0x234
+```
+
+#### Implementation of Page Table
+
+- **Page-Table Base Register (PTBR)**  
+  - Located in the **MMU**.  
+  - Contains the **physical memory address** of the page table.  
+  - Its value is stored in the **PCB** (Process Control Block).  
+
+- **Two-Step Memory Access**  
+    - Steps:
+        1. Access the page table to get the frame number.  
+        2. Access the actual physical memory using the frame number + offset.  
+    - This is **slower** because it requires **two memory accesses**.
+    - Speed can be improved using **Translation Lookaside Buffers (TLB)**.**
+
+- **Translation Lookaside Buffer (TLB)**  
+  - A form of **associative memory**: accessed by content, not by address.  
+  - Implemented in **MMU hardware** for constant-time **O(1)** lookups with Limited size.  
+  - May be **flushed** after a context switch, or include a **PID field** to distinguish entries from different processes.  
+
+#### Effective Memory-Access Time
+```yaml
+- 20 ns for TLB search
+- 100ns for memory access
+
+Effective Memory-Access Time(EMAT)
+- if 70% hit-ratio
+    EMAT = 0.7 * (20 + 100) + (1 - 0.7) * (20 + 100 + 100) = 150 ns
+
+if 98% TLB hit-ratio
+    EMAT = 0.98 * 120 + 0.02 * 220 = 122 ns
+```
+
+---
+
+Maintained by the **OS** for each process.  
+
+![Page Table Implementation](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH6ttm1sus7BGQO2R_FcEjEta8s0dMDEdpDw&s)
+
+#### Memory Protection
+- Each page is associated with a set if **protection bit** in page table
+
+- Valid-invalid bit: the page/frame is accessible to read(may be permission or being moved to virtual memory happen)
+
+#### Shared Pages
+
+> **Idea:** Map the same physical page frame into multiple processes’ address spaces to save memory.
+
+- **Code sharing:** Allow process share common code(text segments)
+- **Requirement:** Must be Reentrant code(works the same aften context switch back)
+- **Protection:** Only one copy of **read-only** shared code in physical memory
+- **Copy-on-Write (COW):** After `fork()`, parent/child initially **share** pages; on the **first write**, the OS duplicates the page.
+
+#### Solutions to page table too large to be loaded
+
+> Large logical address spaces huge. The following schemes reduce memory overhead.
+
+1. Hierarchical Paging
+    - Create a table to store several divided smaller page table address
+    - two-level hierarchical paging: 10 bit outer index, 10bit inner index, 12 bit, like two level array A[1000] -> A[10][100]
+    - Total entries more but the single page table is smaller
+    - might be a lot of unused memory space but still need to reserved
+    - ![Two-Level Page Table](https://i.sstatic.net/Iz7Ti.png)
+2. Hash Page Tables
+    - Hash virtual page number  into a bucket
+    - Allocated if need to use
+    - Pointers waste memory like linked list
+    - ![Hash Page Tables](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9I21E-wo71VQhm4XM4XqkZ1FBD-_4Pi-QdA&s)
+3. Inverted Page Table
+    - Maintain **frame table** which store (PID, page number)
+    - Hard to support shared page/memory
+    - ![Inverted Page Table](https://media.geeksforgeeks.org/wp-content/uploads/33-6.png)
+#### Quick Comparison
+
+| Scheme                    | Memory Overhead                    | Miss Handling Cost          | Best For                          |
+|--------------------------|------------------------------------|-----------------------------|-----------------------------------|
+| Multi-Level Paging       | Low for sparse spaces (on-demand)  | Multiple level walks        | General-purpose OS, x86-64        |
+| Hashed Page Tables       | Proportional to used pages         | Hash + bucket scan          | Large, sparse 64-bit spaces       |
+| Inverted Page Table      | Proportional to **physical frames**| Hash/probe in IPT           | Systems minimizing table memory   |
+
 
 ## Segmentation
+
+> Split process’s logical address space into **variable-size** such as code, stack, heap, globals
+
+- **Continuous vs. non-continuous**
+  - **Paging**: fixed-size blocks (pages/frames), non-contiguous in physical memory.
+  - **Segmentation**: **variable-size** blocks (segments); each segment is placed **contiguously** in physical memory (can lead to external fragmentation).
+- **Logical address format**: **(segment number, offset)**  
+  - The **offset** must satisfy `0 ≤ offset < limit(segment)`.  
+
+### Segment Table (Per Process)
+Each entry contains:
+- **Base** (e.g., 4 or 8 bytes): start **physical address** of the segment.
+- **Limit** (e.g., 4 or 8 bytes): **length** of the segment (bytes).
+- Protection bits
+
+> **Translation rule:**  
+> If `offset < limit`: **physical address = base + offset**  
+else **trap (segmentation fault)**.
+
+### Address Translation Comparison
+- **Segment:**
+    - Table entry: (base, limit, flags)
+    - Segment base address could be **arbitrary**
+    - The length of limit is the same as **physical memory size**
+- **Page:**
+    - Table entry: (frame base address)
+    - Frame base address = frame number * page size
+    - The length of offset is the same as **page size**
+
 ## Segmentation with Paging
+- Apply segmentation in logic address space
+- Apply paging in physical address space
+
+- ![Segmentation with Paging](https://www.gatevidyalay.com/wp-content/uploads/2018/11/Segmented-Paging-Translating-Logical-Address-into-Physical-Address-Diagram.png)
