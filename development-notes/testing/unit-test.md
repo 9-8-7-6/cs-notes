@@ -3,12 +3,12 @@
 ## Feature
 - Test edge cases
 - Keep testing things that you think already right, when you change code
-- Write many test first, then finishing the rest of the code will be much faster
+- TDD: Write many test first, then finishing the rest of the code will be much faster
 - Once the scale grow large enough, unit test help developer handle all dependent component that are hard to keep in mind clearly
 - Automates regression checking, ensuring that new changes don’t reintroduce old bugs
 - Provides a safety net that increases developer confidence in refactoring
 
-## Test-Driven Development
+## Test-Driven Development(TDD)
 - Unit test after code -> just check existing behavior, don't improve design
 - Unit test first -> shape design and improve development
 - TDD cycle:
@@ -30,4 +30,3 @@
 ## Limitations
 - Cannot catch all bugs (especially integration issues or system-level problems).  
 - Writing and maintaining tests requires **time and discipline**.  
-
