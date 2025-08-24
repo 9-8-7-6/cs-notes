@@ -3,6 +3,8 @@
 > **Note:** When reading a table, the rows appear in an *unspecified order*  
 > unless sorting is explicitly requested using an `ORDER BY` clause.
 
+---
+
 ## Table Basics
 
 To remove a table from the database:
@@ -11,7 +13,7 @@ To remove a table from the database:
 DROP TABLE table;
 ```
 
-However, if the table does not exist, this command will result in an error.
+If the table does not exist, the above command will result in an error.
 To safely drop a table only if it exists, use:
 ```sql
 DROP TABLE IF EXISTS
@@ -19,20 +21,21 @@ DROP TABLE IF EXISTS
 
 ## Identity Columns
 
-- An identity column is a special column that is generated automatically from an implicit sequence. 
-- An identity column is automatically marked as NOT NULL, 
+- An identity column is generated automatically from an implicit sequence
+- Identity columns are automatically **NOT NULL**
 - **Important:** Identity columns don't guarantee uniqueness, you must enforce uniqueness using `PRIMARY KEY` or `UNIQUE`.
 
 
 ### Behavior Comparison
 
-#### SERIAL: You can override the value in insert:
+#### SERIAL: You can override the value in `INSERT`:
 
 ```sql
 INSERT INTO table (id, name) VALUES (5, 'test');
 ```
 
-#### GENERATED ALWAYS: You cannot override unless you explicitly use:
+#### GENERATED ALWAYS
+You cannot override unless you explicitly use `OVERRIDING SYSTEM VALUE`:
 
 ```sql
 INSERT INTO table (id, name) 
@@ -50,9 +53,9 @@ Generated columns are special table columns that are **automatically computed** 
 
 ### 1. Stored
 
-- Computed **when written** (during `INSERT` or `UPDATE`)
-- **Consumes storage** like a normal column
-- Conceptually similar to a **view**, but stored physically
+- Computed **when written** (`INSERT` / `UPDATE`)
+- **Consumes storage**
+- Similar to a **view**, but stored physically
 - **PostgreSQL currently only supports this type**
 
 ### 2. Virtual *(not supported in PostgreSQL)*
@@ -75,77 +78,55 @@ CREATE TABLE people (
 
 ## Rules and Restrictions
 
-- Generation expression must use immutable functions only
+- Generation expression must use immutable functions only.
 
 - Generation expression cannot:
-
     - Use subqueries
-
     - Reference other generated columns
-
     - Reference system columns (except tableoid)
-
 - A generated column cannot:
-
     - Have a default value
-
     - Be an identity column
-
     - Be part of a partition key
 
 ### Inheritance and Partitioning
-
 - If a parent column is generated, the child must also be generated
-
     - Child may use a different expression
-
-- If a parent column is not generated, the child must not be generated
-
-- In CREATE TABLE ... INHERITS or ... PARTITION OF:
-
+- If a parent column is **not generated**, the child must not be generated
+- In `CREATE TABLE ... INHERITS` or `... PARTITION OF`:
     - Omitting GENERATED in the child copies it from the parent
-
-- ALTER TABLE ... INHERIT or ALTER TABLE ... ATTACH PARTITION:
-
-    - Requires matching generation status (generated vs. not generated)
-
-    - Does not require matching generation expressions
-
+- In `ALTER TABLE ... INHERIT` or `... ATTACH PARTITION`:
+    - Requires matching generation status
+    - Expression does not have to match
 - In multiple inheritance:
-
     - All parents must agree on the generated status
-
     - If expressions differ, the child must explicitly specify its expression
 
 ### Additional Considerations
-
 - Access Privileges
 Generated columns maintain separate privileges from their base columns.
 You can grant read access on the generated column without exposing the base columns.
 
 - Triggers
-
-    - Computation occurs after BEFORE triggers
-
-    - Changes to base columns in BEFORE triggers are reflected in generated columns
-
+    - Computation occurs after **BEFORE triggers**
+    - Changes to base columns in BEFORE triggers are reflected
     - Cannot reference generated columns inside BEFORE triggers
 
 - Logical Replication
 
-    - Generated columns are excluded from logical replication
+    - Generated columns are **excluded** from logical replication
 
-    - Cannot be listed in CREATE PUBLICATION
+    - Cannot be listed in `CREATE PUBLICATION`
 
 ### Constraints
 
-A constraint is a rule defined on a column or a column restrict the data inserted or updated.
+A constraint is a rule on a column(s) to restrict the data
 
 #### Check Constraints
 
-- Check constraints allow you to specify the value in a certain column must satisfy a boolean expression
+- Check constraints specify the value in certain columns must satisfy a boolean expression
 
-```PostgreSQL
+```sql
 CREATE TABLE products (
     product_no integer,
     name text,
@@ -153,9 +134,9 @@ CREATE TABLE products (
 );
 ```
 
-- You can also give the constraint a separate name. This clarifies error messages and allows you to refer to the constraint when you need to change it.
+Named constraints for clarity:
 
-```PostgreSQL
+```sql
 CREATE TABLE products (
     product_no integer,
     name text,
@@ -163,17 +144,15 @@ CREATE TABLE products (
 );
 ```
 
-#### Limitations of Check Constraints in PostgreSQL
-- Check constraints can only reference the current row.
-    - You cannot compare values against other rows or tables.
-    - While it might appear to work, it may lead to inconsistent data and restore failures after a database dump.
-    - Example failure: rows are restored in an order that violates the constraint.
+#### Limitations on Check Constraints
+- Can only reference the current row
+    - Cannot compare values against other rows or tables
 - Do not use CHECK for cross-row or cross-table logic.
 Use these instead:
-    - UNIQUE
-    - EXCLUDE
-    - FOREIGN KEY
-- If you only need to check other rows once at insertion time, use a custom trigger instead.
+    - **UNIQUE**
+    - **EXCLUDE**
+    - **FOREIGN KEY**
+- Use a custom trigger, if you only need to check other rows once at insertion time
 Triggers are not enforced during a pg_dump restore, so they avoid related issues.
 - PostgreSQL assumes CHECK conditions are immutable:
     - The result must always be the same for the same input row.
@@ -183,7 +162,7 @@ Triggers are not enforced during a pg_dump restore, so they avoid related issues
 
 - Recommended process when changing function logic used in a CHECK constraint:
 
-```PostgreSQL
+```sql
 ALTER TABLE your_table DROP CONSTRAINT your_check;
 -- Modify the function logic here
 ALTER TABLE your_table ADD CONSTRAINT your_check CHECK (...);
@@ -194,7 +173,7 @@ This ensures the constraint is re-evaluated across all rows.
 
 > **NOT-NULL** constraint is equivalent to creating a **CHECK** but more efficient.
 
-```PostgreSQL
+```sql
 CREATE TABLE products (
     product_no integer NOT NULL,
     name text NOT NULL,
@@ -204,9 +183,9 @@ CREATE TABLE products (
 
 #### Unique Constraints
 
-> Data in column **only** is unique among all rows in the table.
+> Column values must be unique among all rows
 
-```PostgreSQL
+```sql
 CREATE TABLE products (
     product_no integer,
     name text,
@@ -219,7 +198,7 @@ CREATE TABLE products (
 
 > This requires values be both **unique** and **not null**
 
-```PostgreSQL
+```sql
 CREATE TABLE products (
     product_no integer UNIQUE NOT NULL,
     name text,
@@ -233,83 +212,97 @@ CREATE TABLE products (
 );
 ```
 
-- Primary key will automatically create an unique B-tree index
+- A primary key automatically creates an unique **B-tree index**
 
 #### Foreign Keys
 
-> A foreign key is a column or a set of columns in one table that establishes a link to the primary key of another table, enforcing referential integrity between the two tables.
+> A foreign key link one table's column(s) to the primary key of another table, enforcing referential integrity between two tables.
 
 ### System Columns
 
 > Every table has several system columns that are implicitly defined by the system.
 
-- tableoid
-    - **tableoid** is a built-in system column that returns the OID of the table from which each row was read.
-- xmin
-    - The transaction ID (XID) of the transaction that inserted the row
-- cmin
-    - The command ID within the inserting transaction
-- xmax
-    - The transaction ID of the transaction that deleted or invalidated the row
-- cmax
-    - The command ID within the deleting transaction
-- ctid
-    - The physical location of the row within its table as a (block, offset) tuple.
+- tableoid : **tableoid** is a built-in system column that returns the OID of the table row was read.
+- xmin : The transaction ID (XID) of the transaction that inserted the row
+- cmin : The command ID within the inserting transaction
+- xmax : The transaction ID of deleting/invalidation transaction
+- cmax : The command ID within the deleting transaction
+- ctid : The physical location of the row location in (block, offset) format
 
 
 ### Modifying Tables
 
 #### Add columns
 
-> ALTER TABLE `products` ADD COLUMN `description` text;
+```sql
+ALTER TABLE `products` ADD COLUMN `description` text;
+```
 
-> ALTER TABLE `products` ADD COLUMN description `text` CHECK (description <> '');
+```sql
+ALTER TABLE `products` ADD COLUMN description `text` CHECK (description <> '');
+```
 
 #### Remove columns
 
-> ALTER TABLE `products` DROP COLUMN `description`;
+```sql
+ALTER TABLE `products` DROP COLUMN `description`;
+```
 
 #### Add constraints
 
-> ALTER TABLE `products` ADD CHECK (name <> '');
+```sql
+ALTER TABLE `products` ADD CHECK (name <> '');
+```
 
 #### Remove constraints
 
-> ALTER TABLE products DROP CONSTRAINT some_name;
+```sql
+ALTER TABLE products DROP CONSTRAINT some_name;
+```
 
 #### Change default values
 
-> ALTER TABLE `products` ALTER COLUMN `price` SET DEFAULT `7.77`;
+```sql 
+ALTER TABLE `products` ALTER COLUMN `price` SET DEFAULT `7.77`;
+```
 
 #### Change column data types
 
-> ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
+```sql
+ALTER TABLE products ALTER COLUMN price TYPE numeric(10,2);
+```
 
 #### Rename columns
 
-> ALTER TABLE products RENAME COLUMN product_no TO product_number;
+```sql
+ALTER TABLE products RENAME COLUMN product_no TO product_number;
+```
 
 #### Rename tables
 
-> ALTER TABLE products RENAME TO items;
+```sql
+ALTER TABLE products RENAME TO items;
+```
 
 ### Privileges
 
-#### Object is assigned to the role created it as owner normally.To allow other roles to use it, *privileges* must be granted.
+- By default, an object is owned by the role that created it.
 
-> Assign a new owner
+- To allow others to use it, **privileges** must be granted.
+
+#### Change Ownership
 
 ```sql
 ALTER TABLE table_name OWNER TO new_owner;
 ```
 
-> Assign privileges
+#### Assign privileges
 
 ```sql
 GRANT UPDATE ON accounts TO joe;
 ```
 
-> Revoke previously-granted privilege(Unto)
+#### Revoke Privileges(Unto previous grant)
 
 ```sql
 REVOKE ALL ON accounts FROM PUBLIC;

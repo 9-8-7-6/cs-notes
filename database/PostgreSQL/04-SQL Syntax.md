@@ -1,31 +1,57 @@
 # SQL Syntax
 
 ## Lexical Structure
-- A command is terminated by a semicolon (;)
-- A dollar sign ($) followed by digits is used to:
-    - Represent a positional parameter in function definitions or prepared statements.
-    - In other contexts, $ can be part of:
-        - An identifier
-        - A dollar-quoted string constant
-- Parentheses (())
-    - Used to group expressions and enforce precedence.
-    - Sometimes required as part of the fixed syntax of certain SQL commands.
-- Brackets ([])
-    - Used to select elements from an array.
-- Commas (,)
-    - Used to separate elements in a list within various SQL constructs.
-- Semicolon (;)
-    - Used to terminate an SQL command
-    - Cannot appear inside a command, except in:
-        - A string constant
-        - A quoted identifier
-- Colon (:)
-    - Used to select slices from arrays (see Section 8.15).
-    - In some SQL dialects (e.g., Embedded SQL), used to prefix variable names.
-- Asterisk (*)
-    - Represents all fields of a table row or composite value.
-    - In aggregate functions (e.g., COUNT(*)), it denotes the aggregate has no explicit parameter.
-- Period (.)
-    - Used in:
-        - Numeric constants
-        - Separating schema, table, and column names
+
+### Command Terminator
+- **Semicolon (;)**
+  - Terminates an SQL command.
+  - Cannot appear inside a command, except in:
+    - A string constant
+    - A quoted identifier
+
+---
+
+### Parameters & Identifiers
+- **Dollar sign ($)**
+  - `$` + digits:
+    - Represents a **positional parameter** in function definitions or prepared statements.
+  - In other contexts, `$` can appear in:
+    - Identifiers
+    - Dollar-quoted string constants
+
+---
+
+### Grouping & Precedence
+- **Parentheses ( )**
+  - Group expressions and enforce precedence.
+  - Sometimes required as part of fixed SQL syntax.
+
+---
+
+### Arrays
+- **Brackets [ ]**
+  - Used to select **elements** from an array.
+- **Colon (:)**
+  - Used to select **slices** from arrays
+  - In some SQL dialects (e.g., Embedded SQL), used to prefix variable names.
+
+---
+
+### Lists
+- **Comma (, )**
+  - Separates elements in a list within SQL constructs.
+
+---
+
+### Wildcards
+- **Asterisk (*)**
+  - Represents **all fields** of a table row or composite value.
+  - In aggregate functions (e.g., `COUNT(*)`), denotes the aggregate has no explicit parameter.
+
+---
+
+### Names & Constants
+- **Period (.)**
+  - Used in:
+    - Numeric constants (e.g., 3.14)
+    - Separating schema, table, and column names (e.g., schema.table.column)
