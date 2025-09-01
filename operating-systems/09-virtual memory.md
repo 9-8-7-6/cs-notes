@@ -102,3 +102,32 @@
 ### Demand Segmentation
 - Demand Segmentation: better for programmer’s perspetive
 
+---
+
+### Frame Allocation
+- Fixed allocation
+    - Equal allocation (100 frames, 5 processes → 20 frames/process)
+    - Proportional allocation: allocate according to the size of the process
+
+- Priority allocation
+    - Using proportional allocation based on **priority**
+
+- Local allocation
+    - Each process selects from its allocated frames
+
+- Global allocation
+    - A process selects a replacement frame from the set of all frames (may come from another process)
+
+---
+
+### Thrashing
+> Spending more time paging than executing, leading to low CPU utilization as the degree of multiprogramming grows
+
+1. I/O swap (page fault)
+2. Low CPU utilization
+3. OS increases the degree of multiprogramming
+4. New processes take old processes' frames
+5. More page faults lead to more I/O
+6. CPU utilization drops even further
+
+![Thrashing](https://media.geeksforgeeks.org/wp-content/uploads/2-103.png)
