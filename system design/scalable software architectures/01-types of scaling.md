@@ -47,3 +47,8 @@ Service metrics are measure of work throughput:
 8. GPUs, TPUs(special-purpose accelerators)
 
 --- 
+
+## Parallelism within a machine
+- While a process is blocked, another process can take over the CPU
+- A process can have multiple threads which execute concurrently while sharing the same memory
+
