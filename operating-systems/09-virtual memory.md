@@ -69,6 +69,36 @@
 
 ---
 
+### Page Replacement
+> Select which frame to be replaced when a page fault occurs wihout free frame
+
+- Swap out a process.
+- **Page replacement**: find a process not currently used and free it.
+    - Use **dirty bit** on page to identify the pages is modified -> reduce disk's I/O.
+
+#### Page Replacement Algorithms
+
+- **FIFO**: the oldest page in a FIFO queue is replaced
+
+- **Optimal**: the longest period of time **will not** being used is replaced
+
+- **LRU**(Least Recently Used): the longest period of time not being used is replaced
+    - Counter implementation: use *timestamp* for each access
+    - Stack: use a stack/doubly-linked list, remove the page at the bottom.
+
+- **Counting**  
+  Use counters to track how often a page is accessed.  
+
+  - **LFU (Least Frequently Used)**: replace the page with the **lowest reference count**.  
+    - Idea: pages less used in the past are unlikely to be used soon.  
+    - Problem: a once-hot page may stay forever even if no longer needed.  
+
+  - **MFU (Most Frequently Used)**: replace the page with the **highest reference count**.  
+    - Idea: a heavily used page was likely brought in long ago and may not be needed further.  
+    - Opposite of LFU; rarely used in practice.
+
+---
+
 ### Demand Segmentation
 - Demand Segmentation: better for programmer’s perspetive
 
