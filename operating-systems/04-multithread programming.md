@@ -64,3 +64,13 @@
 - Provides flexibility and better resource usage.  
 
 ![Many-to-Many](https://media.geeksforgeeks.org/wp-content/cdn-uploads/gq/2015/07/many_to_many1-300x200.jpg)
+
+---
+
+## Threading issus
+
+* Semantics of fork() and exec()
+  * fork() could be:
+    1. Copy the whole process
+    2. Copy the thread only
+  * execlp() replace the entire process
