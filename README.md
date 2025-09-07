@@ -29,6 +29,9 @@
 ### System Design
 - Notes from [CS-310 Scalable Software Architectures](https://youtube.com/playlist?list=PLWl7jvxH18r0u5VRZsOjhghNXc_Ec4dZz&si=Ar1eeYR_Q1LBshGh)  by Prof. Stephen P. Tarzia(Northwestern University).
 
+### Data Structure and Algorithm
+- Algorithm's Notes from [MIT 6.006 Introduction to Algorithms, Spring 2020](https://www.youtube.com/playlist?list=PLUl4u3cNGP63EdVPNLG3ToM6LaEUuStEY)
+
 ---
 
 ## Disclaimer
