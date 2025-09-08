@@ -1,106 +1,173 @@
 # Process Scheduling
-> Keep several multiprogramming in memory and rotation
-
-* CPU burst(Process execution consists of CPU wait)
-* I/O burst(I/O execution consists of CPU wait)
+> Keep several multiprogramming in memory and rotate CPU among them.
 
 ---
 
-## Preemptive vs. Non-preemptive
-* Preemptive scheduling:
-  1. From running to waiting state(I/O phase start)
-  2. `From running to ready state(time sharing)`
-  3. `From waiting to read state(I/O phase finish)`
-  4. Terminate
-Require process synchronization(CPU burst only, not I/O)
+## Basic Concepts
+- **CPU burst**: Process execution consists of CPU computation time.  
+- **I/O burst**: Process execution consists of I/O waiting time.  
 
-**Scheler**: make decision
-**Dispatcher**: do switch
+---
 
-* Non-preemptive scheduling:
-  1. From running to waiting state(I/O phase start)
-  2. Terminate
+## Preemptive vs. Non-Preemptive Scheduling
+
+### Preemptive Scheduling
+- CPU can be taken away from a running process.  
+- Possible transitions:
+  1. From **running → waiting** (I/O phase start)  
+  2. From **running → ready** (time slice expired, time-sharing)  
+  3. From **waiting → ready** (I/O phase finished)  
+  4. Process termination  
+
+- **Scheduler**: Decides which process gets CPU next.  
+- **Dispatcher**: Performs context switch (loads process state, jumps to correct code).  
+- **Note**: Requires process synchronization to avoid race conditions.
+
+### Non-Preemptive Scheduling
+- Once a process acquires CPU, it keeps it until:
+  1. It voluntarily enters waiting state (I/O start).  
+  2. It terminates.  
 
 ---
 
 ## Scheduling Criteria
-* CPU utilization
-  * Thoretically: 0%~100%
-  * Real system: 40%~90%
+1. **CPU utilization**  
+   - Theoretically: 0% ~ 100%  
+   - Real system: 40% ~ 90%  
 
-* Throughput
-  * Number of completed processes per time unit
+2. **Throughput**  
+   - Number of processes completed per unit time.  
 
-* Turnaround time
-  * submission ~ completion
+3. **Turnaround time**  
+   - Submission → Completion.  
 
-* Waiting time
-  * total waiting time in the *ready queue*
+4. **Waiting time**  
+   - Total time spent in the *ready queue* (I/O waiting is **not** counted).  
 
-* Response time
-  * submission ~ first response is produced
-
----
-
-## Algorithm (Software Level)
-
-> Note: **I/O time is not counted in waiting time** when analyzing scheduling algorithms.
+5. **Response time**  
+   - Submission → First response is produced (important in interactive systems).  
 
 ---
 
-### 1. First-Come, First-Serve (FCFS) Scheduling
-- **Definition**: The process that arrives first gets the CPU first.  
-- **Pros**: Simple and fair in terms of arrival order.  
+## Scheduling Algorithms (Software Level)
+
+> Note: **I/O time is not counted as waiting time** when analyzing scheduling algorithms.
+
+### 1. First-Come, First-Served (FCFS)
+- **Definition**: Process that arrives first runs first.  
+- **Pros**: Simple, fair in arrival order.  
 - **Cons**:  
-  - **Convoy effect**: A long process at the front delays all shorter ones.  
-  - Average waiting time can be very high.
+  - **Convoy effect**: Long process delays all shorter processes.  
+  - High average waiting time.
 
 ---
 
-### 2. Shortest-Job-First (SJF) Scheduling
-- **Definition**: The process with the shortest CPU burst length gets the CPU first.  
-- **Types**:  
-  1. **Non-preemptive** – Once a process gets the CPU, it cannot be preempted until completion.  
-  2. **Preemptive (Shortest Remaining Time First, SRTF)** – A new process with a shorter burst time can preempt the CPU.  
-- **Challenge**: The exact length of the next CPU burst is unknown, so the system estimates using past behavior (approximate SJF).  
-- **Pros**:  
-  - Optimal for minimizing average waiting time (theoretically).  
+### 2. Shortest Job First (SJF)
+- **Definition**: Process with the shortest CPU burst runs first.  
+- **Variants**:  
+  1. **Non-preemptive** – Once a process starts, it runs to completion.  
+  2. **Preemptive (Shortest Remaining Time First, SRTF)** – A new process with shorter burst time preempts.  
+
+- **Challenge**: Need to predict CPU burst length (usually exponential averaging).  
+- **Pros**: Theoretically minimizes average waiting time.  
 - **Cons**:  
-  - Requires burst time prediction.  
-  - Can cause **starvation** for long processes.
+  - Burst length estimation is difficult.  
+  - **Starvation** for long jobs.
 
 ---
 
-### Priority Scheduling
-- **Definition**: CPU is allocated to the process with the highest priority.  
-- **Note**: All scheduling algorithms can be seen as priority scheduling, but the definition of priority differs (arrival time, burst length, etc.).  
-- **Problem**: **Starvation** – low-priority processes may never execute.  
-- **Solution**: **Aging** – gradually increase the priority of waiting processes over time.
+### 3. Priority Scheduling
+- **Definition**: Process with the highest priority runs first.  
+- **Note**: All algorithms can be seen as priority scheduling with different priority definitions.  
+- **Problem**: **Starvation** – low-priority jobs may never run.  
+- **Solution**: **Aging** – gradually increase waiting processes’ priority.
 
 ---
 
-### 3. Round-Robin (RR) Scheduling
-- **Definition**: Each process gets a small, fixed time quantum (TQ). When TQ expires, the process is preempted and placed back into the ready queue.  
+### 4. Round-Robin (RR)
+- **Definition**: Each process gets a fixed time quantum (TQ). When TQ expires, it is preempted and moved to the ready queue.  
 - **Performance**:  
-  - If **TQ is large** → Behavior approaches **FIFO**.  
-  - If **TQ is small** → Better responsiveness, but **context-switch overhead increases**.  
+  - **Large TQ** → behaves like FCFS.  
+  - **Small TQ** → responsive, but high context-switch overhead.  
 - **Pros**:  
-  - Fair to all processes.  
-  - Good for time-sharing systems.  
+  - Fair, good for time-sharing systems.  
 - **Cons**:  
-  - Performance depends heavily on the choice of TQ.
+  - Depends heavily on TQ selection.
 
 ---
 
-### 4. Multilevel Queue Scheduling
-- **Definition**: Processes are divided into different queues, each with its own scheduling algorithm.  
+### 5. Multilevel Queue Scheduling
+- **Definition**: Processes are divided into multiple queues, each with its own scheduling policy.  
 - **Rules**:  
-  - Processes can move between queues (e.g., through **aging**).  
-  - Different queues serve different types of processes:  
-    - **High-priority queues**: Interactive and I/O-bound processes (short CPU bursts).  
-    - **Low-priority queues**: CPU-bound processes (long CPU bursts).  
-- **Pros**:  
-  - Can tailor scheduling policies to different types of workloads.  
-- **Cons**:  
-  - More complex.  
-  - Requires careful tuning to avoid starvation.
+  - Processes may move between queues (e.g., **aging**).  
+  - Different queues serve different workloads:  
+    - High-priority queues: interactive, I/O-bound jobs.  
+    - Low-priority queues: CPU-bound jobs.  
+- **Pros**: Tailored scheduling per workload type.  
+- **Cons**: Complex, tuning needed to avoid starvation.
+
+---
+
+## Scheduling in Hardware Level
+
+### Multi-Processor Scheduling
+- **Asymmetric multiprocessing (AMP)**  
+  - One master processor handles OS tasks; others run user processes.  
+
+- **Symmetric multiprocessing (SMP)**  
+  - Each processor is self-scheduling.  
+  - Requires synchronization (locks, semaphores).
+
+---
+
+### Multi-Threaded / Multi-Core Systems
+- Each core may support multiple hardware threads (e.g., Intel Hyper-Threading).  
+- **Goal**: Reduce stalls by switching to another thread when waiting for memory.  
+
+---
+
+### Multi-Core Processor Scheduling
+- **Memory stall**: CPU waits for data from memory.  
+- **Coarse-grained multithreading**: Entire pipeline is switched when a stall occurs.  
+- **Fine-grained multithreading**: Switch every cycle to maximize utilization.  
+
+---
+
+### Real-Time Scheduling
+- **Definition**: Meeting process deadlines is crucial.  
+
+- **Types**:  
+  - **Soft real-time**: Missing deadline is tolerated but undesirable.  
+  - **Hard real-time**: Missing deadline = total system failure.  
+
+- **Algorithms**:  
+  - FCFS  
+  - **Rate-Monotonic (RM)** – Static priority, shorter period = higher priority.  
+  - **Earliest Deadline First (EDF)** – Dynamic priority, process with closest deadline runs first.  
+
+---
+
+### Processor Affinity
+- Binding processes to specific CPU cores.  
+- **Benefits**: Better cache reuse.  
+- **Types**:  
+  - **Soft affinity**: OS may migrate process.  
+  - **Hard affinity**: Process cannot migrate.  
+
+---
+
+### Memory Access Models
+- **UMA (Uniform Memory Access)**  
+  - All CPUs access memory with equal latency.  
+
+- **NUMA (Non-Uniform Memory Access)**  
+  - Memory latency depends on CPU-to-memory distance.  
+  - Requires OS scheduling awareness.  
+
+---
+
+### Load Balancing
+- **Goal**: Evenly distribute workload across CPUs.  
+- **Methods**:  
+  - **Push migration**: Overloaded CPU pushes tasks to idle ones.  
+  - **Pull migration**: Idle CPU pulls tasks from busy ones.  
