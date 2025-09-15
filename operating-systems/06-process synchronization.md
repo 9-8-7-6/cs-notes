@@ -114,3 +114,49 @@ do {
 - Progress
 - Bounded Waiting
 
+---
+
+## Pthreads Synchronization
+
+### Mutex Locks
+- Use `pthread_mutex_t` to protect **critical sections**.  
+- Ensures that only **one thread** can access a shared resource at a time.  
+- Prevents **race conditions**.  
+- **Common functions**:
+  - `pthread_mutex_init()` – initialize a mutex.  
+  - `pthread_mutex_lock()` – acquire a lock (block if already locked).  
+  - `pthread_mutex_unlock()` – release the lock.  
+  - `pthread_mutex_destroy()` – free resources when done.  
+
+### Condition Variables
+- Used for **thread synchronization**, not just mutual exclusion.  
+- Must be used **together with a mutex**.  
+- Classic use case: **Producer–Consumer problem**.  
+- Functions:
+  - `pthread_cond_wait(&cond, &mutex)`  
+    - Atomically releases the mutex and blocks the thread until signaled.  
+  - `pthread_cond_signal(&cond)`  
+    - Wakes up **one** waiting thread.  
+  - `pthread_cond_broadcast(&cond)`  
+    - Wakes up **all** waiting threads.  
+
+### Hardware Support for Synchronization
+At a lower level, hardware provides **atomic instructions** to implement synchronization primitives.  
+
+- **Atomic**: the operation is indivisible and cannot be interrupted.  
+- Common atomic operations:
+  - **Test-and-Set (TAS)**
+  - **Swap (Exchange)**  
+
+#### Example: Test-and-Set
+```c
+boolean TestAndSet(boolean *lock) {
+    boolean old = *lock;
+    *lock = TRUE;
+    return old;
+}
+```
+
+- If lock was `FALSE`, the caller successfully acquires the lock.
+- If lock was `TRUE`, another thread already holds it → caller must retry (busy waiting).
+
