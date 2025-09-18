@@ -160,3 +160,45 @@ boolean TestAndSet(boolean *lock) {
 - If lock was `FALSE`, the caller successfully acquires the lock.
 - If lock was `TRUE`, another thread already holds it → caller must retry (busy waiting).
 
+### Semaphores
+
+- A **tool** to generalize the synchronization problem
+- A record of how much resource are available
+  - If #record = 1 -> binary semaphore
+  - If #record > 1 -> counting semaphore   
+- Use:
+  - Wait: I need a resource
+  - Signal: I need to free the resource because finishing
+
+### Non-busy Waiting Implementation
+
+#### 1. Core Idea
+- **Semaphore**  
+  - A synchronization data structure with:
+    - An integer `value`
+    - A queue `L` (holding blocked processes / PCBs)
+  - Queue strategy can be FIFO, FILO, etc.
+
+- **Purpose**  
+  - Avoid busy waiting (CPU wasting cycles spinning).
+  - Use **block() / wakeup()** system calls to suspend and resume processes efficiently.
+
+---
+
+#### 2. Workflow
+
+##### `wait()` (P operation)
+1. Decrement `S.value`.
+2. If `S.value < 0`:
+   - Add the current process to the waiting queue `S.L`.
+   - Call `sleep()` to block the process.
+3. Otherwise, continue execution.
+
+```c
+void wait(semaphore S) {
+    S.value--;
+    if (S.value < 0) {
+        add this process to S.L;
+        sleep();   // block()
+    }
+}
