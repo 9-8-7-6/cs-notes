@@ -128,7 +128,7 @@ do {
   - `pthread_mutex_unlock()` – release the lock.  
   - `pthread_mutex_destroy()` – free resources when done.  
 
-### Condition Variables
+### Condition Variables(like a queue)
 - Used for **thread synchronization**, not just mutual exclusion.  
 - Must be used **together with a mutex**.  
 - Classic use case: **Producer–Consumer problem**.  
@@ -160,7 +160,7 @@ boolean TestAndSet(boolean *lock) {
 - If lock was `FALSE`, the caller successfully acquires the lock.
 - If lock was `TRUE`, another thread already holds it → caller must retry (busy waiting).
 
-### Semaphores
+### Semaphores(like a counter)
 
 - A **tool** to generalize the synchronization problem
 - A record of how much resource are available
@@ -418,3 +418,80 @@ Reader() {
 #### Dining-Philosopher Problem
 - Chopsticks are resources as semaphore.
 - Each process need resources.
+
+---
+
+### Monitor (A High-Level Language Construct)
+
+- Similar to a **class** in object-oriented programming.  
+- Encapsulates:
+  - **Local variables** (shared only within the monitor).  
+  - **Procedures / functions** (that operate on these variables).  
+- Properties:
+  - **Mutual exclusion is implicit**: at most **one process (thread)** can be active inside the monitor at any given time.  
+  - Other processes invoking monitor procedures must **wait** until the monitor becomes available.  
+- Advantage:
+  - Provides a **high-level abstraction** for synchronization, avoiding explicit use of low-level primitives like semaphores in user code.  
+- Often combined with **condition variables** inside the monitor to allow waiting and signaling (e.g., `wait()` / `signal()` in Hoare-style monitors).
+  - `wait(c)`: block the calling process, release the monitor, place it in condition queue `c`.  
+  - `signal(c)`:  
+    - **Hoare-style**: immediate handoff to a waiting process.  
+    - **Mesa-style**: wake a process, but caller keeps the monitor until it exits.
+
+#### Example
+1. Dining Philosophers Example
+``` pseudocode
+monitor dp {
+  enum {thinking, hungry, eating} state[5]; // current state
+  condition self[5];  // delay eating if can't obtain chopsticks
+  void pickup(int i)  // pickup chopsticks
+  void putdown(int i) // putdown chopsticks
+  void test(int i)  // try to eat
+  void init() {
+    for(int i=0;i<5;i++)
+      state[i] = thinking;
+  }
+}
+
+void pickup(int i) {
+  state[i] = hungry;
+  test(i);  // try to eat
+  if(state[i] != eating)
+    self[i].wait(); // wait to eat
+}
+
+void putdown(int i) {
+  state[i] = thinking;
+  // check if neighbors are waiting to eat
+  test((i + 4) % 5);  // left one
+  test((i + 1) % 5);  // right one
+}
+
+void test(int i) {
+  if((state[(i + 4) % 5] != eating) && (state[(i + 1) % 5] != eating) && (state[i] == hungry)) {
+    // No neighbors are eating and Pi is hungry
+    state[i] = eating;
+    self[i].signal();
+  }
+}
+```
+
+### Atomic Transactions
+
+#### System Model
+
+- Transaction: a collection of instructions that performs a single logical unit of work
+- Atomic Transaction: operations happens as a single logical unit of work, entirely or not at all
+- Terminated by `commit` or `abort`
+- Aborted transaction must be `rolled back`
+- Write-ahead logging
+  - Transaction ID
+  - Data item name
+  - Old value
+  - New value
+  - Special records (<start Ti>, <commit Ti>, <abort Ti>)
+
+- Log is used to reconstruct the state of systems by `undo(Ti)`, `Redo(Ti)`
+- Checkpoint
+  - When failure occurs, the system consults the log to determine which transactions need undo and which need redo
+  - Use **checkpoints** to reduce the above overhead
