@@ -187,18 +187,234 @@ boolean TestAndSet(boolean *lock) {
 
 #### 2. Workflow
 
-##### `wait()` (P operation)
-1. Decrement `S.value`.
-2. If `S.value < 0`:
-   - Add the current process to the waiting queue `S.L`.
-   - Call `sleep()` to block the process.
-3. Otherwise, continue execution.
+##### Wait (P)
 
 ```c
 void wait(semaphore S) {
-    S.value--;
-    if (S.value < 0) {
-        add this process to S.L;
-        sleep();   // block()
-    }
+  S.value--;
+  if (S.value < 0) {
+    add this process to S.L;
+    sleep();   // block()
+  }
 }
+```
+
+##### Signal (V)
+
+```c
+void signal(semaphore S) {
+  S.value++;
+  if (S.value <= 0) {
+    remove a process P from S.L;
+    wakeup(P);
+  }
+}
+```
+
+---
+
+#### Compare
+- Busy waiting: wastes CPU, but good for short waits.
+- Non-busy waiting: saves CPU, but system calls are slower → better for long waits.
+---
+
+#### Semaphore with Critical Section
+
+##### `wait`
+
+```c
+void wait(semaphore S) {
+  entry-section();
+  S.value--;
+  if (S.value < 0) {
+    add this process to S.L;
+    exit-section();
+    sleep();   // block
+  } else {
+    exit-section();
+  }
+}
+```
+
+##### `signal`
+
+```c
+void signal(semaphore S) {
+  entry-section();
+  S.value++;
+  if (S.value <= 0) {
+    remove a process P from S.L;
+    exit-section();
+    wakeup(P);
+  } else {
+    exit-section();
+  }
+}
+```
+
+---
+
+#### Cooperation Synchronization
+
+- P1 execute S1; P2 execute S2
+- S2 be executed only after S1 has completed
+
+- Implementation:
+``` c
+//shared variable:
+semaphore sync;  
+
+P1:
+  S1;
+  signal(sync);
+
+P2:
+  wait(sync);
+  S2;
+```
+
+---
+
+### Classic Synchronization Problems
+
+#### Bounded-Buffer (Producer-Consumer) Problem
+
+- A pool of *n* buffers, each capable of holding one item
+- Producer: grab an empty buffer and place one item into the buffer
+
+- Consumer: grab a buffer and retract the item
+
+---
+
+#### Readers–Writers Problem (RW)
+
+##### System Model
+- **Shared Data Objects**: A set of common resources.  
+- **Processes**:
+  - **Reader processes**: Access data in read-only mode.
+  - **Writer processes**: Modify data and require exclusive access.
+
+##### rules
+- Multiple **Readers** may access the shared data simultaneously.
+- A **Writer** must have exclusive access (no other Readers or Writers allowed).
+
+##### Priority Issues
+1. First Readers–Writers Problem (Readers Priority): no reader will blocked waiting unless a writer is changing(updating) a shared object
+
+``` c
+// mutual exclusion for write
+semaphore wrt = 1;
+// mutual exclusion for readcount
+semaphore mutex = 1;
+int readcount = 0;
+
+Writer() {
+  while(TRUE) {
+    wait(wrt);
+    // Writer Code
+    signal(wrt);
+  }
+}
+
+Reader() {
+  while(TRUE) {
+    wait(mutex);
+      readcount++;
+      if(readcount == 1)  // It Means First Reader
+        wait(wrt);
+    signal(mutex);
+    // It Means Not First Reader(Having Permission)
+    // Reader Code
+    wait(mutex);
+      readcount--;
+      if(readcount==0)  // Release write lock if no more reads
+        signal(wrt);
+    signal(mutex);
+  }
+}
+```
+###### Notes
+- Readers share a single wrt lock
+- Writer may have starvation problem
+
+2. Second Readers–Writers Problem (Writers Priority)
+**Rule**: Once any writer is ready, **no new reader may start**; writers get priority.  
+**Idea**: Use a *gate* (`readTry`) that writers can close while they wait, so **new readers are held back**. Readers already inside may finish.
+
+###### Semaphores & Counters
+- `resource` = 1 — mutual exclusion for the shared object (writer or first/last reader).
+- `readTry` = 1 — *gate* that writers can hold to block **new** readers.
+- `rmutex` = 1 — protects `readcount`.
+- `wmutex` = 1 — protects `writecount`.
+- `readcount`, `writecount` — number of active readers / waiting+active writers.
+
+
+```c
+semaphore resource = 1;  // lock for the shared resource (lock by writers or first/last reader)
+semaphore readTry  = 1;  // gate readers pass through; writers hold to block new readers
+semaphore rmutex   = 1;  // protects readcount from many readers change to race condition
+semaphore wmutex   = 1;  // protects writecount from many writers change to race condition
+int readcount  = 0;   // Numbers of readers reading
+int writecount = 0;   // Bynbers of writers waiting or writing
+
+// --- writer has priority ---
+Writer() {
+  while (TRUE) {
+    // First writer closes the gate to block new readers
+    wait(wmutex);
+      writecount++;
+      if (writecount == 1)      // first waiting/active writer
+        wait(readTry);          // close the gate so new readers can't start
+    signal(wmutex);
+
+    // Exclusive access to the shared resource
+    wait(resource);
+      // --- write critical section ---
+      // ... Writer Code ...
+    signal(resource);
+
+    // Writer done; last writer reopens the gate for readers
+    wait(wmutex);
+      writecount--;
+      if (writecount == 0)      // last writer done
+        signal(readTry);        // reopen the gate for readers
+    signal(wmutex);
+  }
+}
+
+Reader() {
+  while (TRUE) {
+    // Try to pass the gate; if a writer is/gets ready, gate blocks new readers
+    wait(readTry);              // briefly acquire the gate
+      wait(rmutex);
+        readcount++;
+        if (readcount == 1)     // first reader locks the resource
+          wait(resource);
+      signal(rmutex);
+    signal(readTry);            // release gate quickly so writers can grab it
+
+    // --- read critical section ---
+    // ... Reader Code ...
+
+    // Reader exit; last reader releases the resource
+    wait(rmutex);
+      readcount--;
+      if (readcount == 0)
+        signal(resource);
+    signal(rmutex);
+  }
+}
+```
+
+###### Notes
+- Starvation: Readers can be delayed if writers arrive continuously.
+- Correctness roles:
+  - `resource`: exclusivity for writer or the first/last reader pair.
+  - `readTry`: writer-controlled gate to block new readers.
+  - `rmutex` / `wmutex`: protect the respective counters.
+
+---
+
+#### Dining-Philosopher Problem
+- Chopsticks are resources as semaphore.
+- Each process need resources.
