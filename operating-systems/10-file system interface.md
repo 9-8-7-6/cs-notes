@@ -9,19 +9,19 @@
 
 ## File Operations
 
-- **Typical file operations**:
-  - Create  
-  - Write  
-  - Read  
-  - Reposition (seek within a file)  
-  - Delete  
-  - Truncate  
+### Typical File Operations
+- Create  
+- Write  
+- Read  
+- Reposition (seek within a file)  
+- Delete  
+- Truncate  
 
-- **Tables for managing files**:
-  - **Per-process open-file table**  
-    - Metadata specific to each process that has opened files.  
-  - **System-wide open-file table**  
-    - Metadata shared across all processes in the system.  
+### Tables for Managing Files
+- **Per-process open-file table**  
+  - Metadata specific to each process that has opened files.  
+- **System-wide open-file table**  
+  - Metadata shared across all processes in the system.  
 
 ---
 
@@ -44,15 +44,15 @@
 
 ## Open-File Attributes
 
-- **Attributes (metadata):**
-  - File pointer (per-process)  
-  - File open count (system-wide table)  
-  - Disk location (system-wide table)  
-  - Access rights (per-process)  
+### Attributes (Metadata)
+- File pointer (per-process)  
+- File open count (system-wide table)  
+- Disk location (system-wide table)  
+- Access rights (per-process)  
 
-- **File types:**
-  - Examples: `.exe`, `.com`, `.obj`, `.cc`, `.mov`, etc.  
-  - Serves as a *hint* for the OS to operate on the file in a *reasonable* way.  
+### File Types
+- Examples: `.exe`, `.com`, `.obj`, `.cc`, `.mov`, etc.  
+- Serves as a *hint* for the OS to operate on the file in a *reasonable* way.  
 
 ---
 
@@ -66,7 +66,7 @@
 ### 2. Direct (Relative) Access
 - Access an element at an **arbitrary position** in a file.  
 - File operations include the **block number** as a parameter.  
-- Often referred to as **random access**, emphasizing the access pattern.  
+- Also called **random access**, highlighting the access pattern.  
 
 ### 3. Indexed Access
 - An **index** contains pointers to blocks of a file.  
@@ -74,3 +74,70 @@
   1. Search the index file to locate the pointer.  
   2. Use the pointer to directly access the record.  
 - For **large files**, the index itself can become very large.  
+
+---
+
+## Partition, Volume, Directory
+
+### Partition
+- Can be **formatted** (with a filesystem) or **raw**.  
+- A **raw partition** is a storage unit that has not yet been formatted with a filesystem.  
+
+### Volume
+- A **logical storage unit** created from a partition.  
+- Once a partition is formatted with a filesystem, it becomes a **volume** that can be used by the operating system.  
+
+### Directory
+- Stores information about the files located in the partition/volume.  
+- Provides a **hierarchical structure** (tree) for organizing files.  
+- A *collection of nodes* containing information about all files.  
+
+#### Directory Organization
+1. **Single-Level Directory**  
+    - All files in one directory.  
+    - Filenames must be unique.  
+    - Poor efficiency for locating a file when many files exist.  
+
+2. **Two-Level Directory**  
+   - A separate directory for *each user*.  
+   - Path = username + filename.  
+
+3. **Tree-Structured Directory**  
+   - **Absolute path**: starts from the *root*.  
+   - **Relative path**: starts from a *directory*.  
+
+4. **Acyclic-Graph Directory**  
+   - Uses links to share files or directories.  
+   - UNIX: **symbolic links**.  
+   - A file may have multiple absolute paths.  
+   - Deletion cases:  
+     - Delete the link but not the file.  
+     - Delete the file but not the link → dangling pointer.  
+
+5. **General-Graph Directory**  
+    - May contain cycles
+    - Reference count doesn't work
+    - Garbage collection: Traverse the entire graph from the root and delete the unreachable node
+
+---
+
+## File System Mounting
+- A file system must be **mounted** before it can be accessed.  
+- **Mount point**: root path where a filesystem is mounted.  
+- **Mount time**:  
+  - At boot time.  
+  - Automatically at run-time.  
+  - Manually at run-time.  
+
+---
+
+## File Sharing for Multiple Users
+- **User identity**: each user has a `userID` and `groupID`.  
+- **File ownership**: each file has an **owner**, **group**, and **others**.  
+
+---
+
+## File Protection
+- Files should be kept from
+  - physical damage
+  - improper access
