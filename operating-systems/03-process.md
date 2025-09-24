@@ -97,14 +97,14 @@
 - Processes form a **parent–child hierarchy** (tree structure).  
 
 ## Resource Creation
-- **Resource Sharing Models**:  
-  - Parent and child share **all resources**.  
-  - Child shares a **subset** of parent resources.  
-  - Parent and child share **no resources**.  
+- **Types of Resource Sharing Models**:  
+  1. Parent and child share **all resources**.  
+  2. Child shares a **subset** of parent resources.  
+  3. Parent and child share **no resources**.  
 
-- **Memory Content**:  
-  - Child is a **duplicate** of the parent.  
-  - Or child has a **new program loaded** into it.  
+- **Types of Memory Content**:  
+  1. Child is a **duplicate** of the parent.  
+  2. Child has a **new program loaded** into it.  
 
 ### UNIX/Linux Process Creation
 - **fork()** system call  
