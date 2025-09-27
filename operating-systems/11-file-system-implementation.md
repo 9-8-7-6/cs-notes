@@ -4,15 +4,15 @@
 
 ## File-System Structure
 
-- I/O transfers between memory and disk are performed in units of **blocks**  
-  - One block is one or more **sectors**  
-  - One sector is usually **512 bytes**
+- I/O transfers between memory and disk are performed in units of **blocks**.  
+  - One block is one or more **sectors**.  
+  - One sector is usually **512 bytes**.  
 
-- One OS can support more than one **file system type**  
-  - Examples: **NTFS**, **FAT32**  
+- One OS can support more than one **file system type**.  
+  - Examples: **NTFS**, **FAT32**.  
   - Each FS may differ in:  
-    - Disk allocation method  
-    - Search/indexing implementation  
+    - Disk allocation method.  
+    - Search/indexing implementation.  
 
 - Two main design problems in file system:  
   1. **Interface to user programs**  
@@ -28,14 +28,13 @@ A **layered file system** separates responsibilities into multiple layers,
 so that **file system APIs** are gradually mapped down to **physical disk locations**.
 
 ### Concept
+
 - **High-level API** (e.g., `open`, `read`, `write`) → user program interaction.  
 - **Logical file system** → maintains directories, file names, metadata, access control.  
 - **Mapping**:  
   - Logical file system → **logical blocks**.  
   - File-organization module → maps logical blocks → **physical blocks**.  
 - **Physical storage** → actual sectors/blocks on disk.  
-
----
 
 ### Layer Structure
 
@@ -74,23 +73,23 @@ so that **file system APIs** are gradually mapped down to **physical disk locati
 
 - **Partition Control Block** *(per partition)*  
   - Stores details of the partition:  
-    - Number of blocks  
-    - Block size  
-    - Free-block list  
-    - Free File Control Block (FCB) pointers  
+    - Number of blocks.  
+    - Block size.  
+    - Free-block list.  
+    - Free File Control Block (FCB) pointers.  
   - Examples:  
-    - UFS → **Superblock**  
-    - NTFS → **Master File Table (MFT)**  
+    - UFS → **Superblock**.  
+    - NTFS → **Master File Table (MFT)**.  
 
 - **File Control Block (FCB)** *(per file)*  
   - Created after formatting.  
   - Contains details regarding a file:  
-    - Permissions  
-    - File size  
-    - Location of data blocks  
+    - Permissions.  
+    - File size.  
+    - Location of data blocks.  
   - Examples:  
-    - UFS → **inode**  
-    - NTFS → stored inside **MFT** (as relational records)  
+    - UFS → **inode**.  
+    - NTFS → stored inside **MFT** (as relational records).  
 
 - **Directory Structure** *(per file system)*  
   - Created after formatting.  
@@ -140,10 +139,10 @@ so that **file system APIs** are gradually mapped down to **physical disk locati
 
 Linux VFS defines four main object types:
 
-- **inode** → represents an individual **file**  
-- **file object** → represents an **open file**  
-- **superblock object** → represents an entire **file system**  
-- **dentry object** → represents an individual **directory entry**  
+- **inode** → represents an individual **file**.  
+- **file object** → represents an **open file**.  
+- **superblock object** → represents an entire **file system**.  
+- **dentry object** → represents an individual **directory entry**.  
 
 ---
 
@@ -158,3 +157,58 @@ Linux VFS defines four main object types:
   - Provides near constant-time searching.  
   - Uses linked lists for collisions on a hash entry.  
   - Hash table usually has a fixed number of entries.  
+
+---
+
+## Allocation Method
+
+- An allocation method refers to how disk blocks are allocated for files.  
+
+### Allocation Strategy
+
+1. **Contiguous allocation**  
+   - Each file occupies a set of contiguous blocks.  
+   - Sequential & random access implemented efficiently.  
+   - **Problems**:  
+     - External fragmentation → compaction.  
+     - File cannot grow → extent-based FS.  
+   - **Extent**: One or more contiguous blocks.  
+   - **Extent structure**: Links several extents.  
+   - Random access becomes more costly in extent-based FS.  
+   - Both internal & external fragmentation possible.  
+
+2. **Linked allocation**  
+   - Each file is a linked list of blocks.  
+   - Each block contains a pointer to the next block.  
+   - Data portion = block size − pointer size.  
+   - Good only for **sequential access**.  
+   - Space overhead: pointer (e.g., 4/512 = 0.78%).  
+     - **Solution**: group into clusters of blocks → internal fragmentation.  
+   - Reliability issue: one missing link breaks the whole file.  
+   - **FAT (File Allocation Table) file system**  
+     - **FAT32**:  
+       - Used in MS-DOS & OS/2.  
+       - Stores all links in a table.  
+       - 32 bits per table entry.  
+       - Located in a section of disk at the **beginning of each partition**.  
+     - FAT table is often *cached in memory*.  
+
+3. **Indexed allocation**  
+  - The directory contains the address of the file index blocks.  
+  - Each file has its own index block.  
+  - Index block stores block numbers for file data.  
+  - Schemes:
+    1. Linked indexed scheme: use linked list to connect index block
+    2. Multilevel scheme(two-level)
+    3. Combined Scheme: UNIX inode
+
+---
+
+## Free-Space Management
+
+- **Free-space list** – records all free blocks  
+- Schemes:  
+  - **Bit vector** (bitmap) – simple, efficient, but costly for large partitions  
+  - **Linked list** – free blocks linked together  
+  - **Grouping** – store addresses of free blocks in blocks themselves  
+  - **Counting** – record start + length of free block runs  
