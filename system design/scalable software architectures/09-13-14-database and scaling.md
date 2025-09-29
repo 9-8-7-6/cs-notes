@@ -185,3 +185,107 @@ SELECT * FROM user NATURAL JOIN post WHERE user.birth_year < 1920 AND post.date 
   - **Wastes space** (duplicate data).  
   - Cannot be edited in one place (updates require multiple copies).  
 - References may exist, but there is **no constraint checking** (e.g., no foreign keys).  
+
+---
+
+## Part 3. Distributed DB Consistency
+
+---
+
+### Consistency
+- When data is **replicated** across multiple nodes, there is always a possibility of **inconsistency**.  
+
+- **CAP Theorem**  
+  1. **Consistency** – Every request always gets the most recent write.  
+  2. **Availability** – Every request receives a non-error response.  
+  3. **Partition tolerance** – The system continues to function despite network partitions (dropped or delayed messages).  
+
+- When distributed DB nodes are **out-of-sync** (partitioned), systems must choose:  
+  - Accept **inconsistent responses**, or  
+  - Wait until nodes **resynchronize** (adds latency).  
+
+- A **perfectly consistent distributed system** would require a **100% reliable, zero-delay network** → not realistic.  
+- The CAP theorem implies a **tradeoff between consistency and delay/availability**.  
+- Inconsistency often leads to **hard-to-debug errors**.  
+- Distributed (NoSQL) databases provide options to configure this **consistency vs. latency tradeoff**.  
+
+---
+
+### Client-Centric Consistency Properties
+
+- **Monotonic Reads**  
+  - Once a client reads `x`, later reads of `x` must return the same or a more recent value.  
+  - **Issue**: Reading from two different nodes during an incomplete write may return inconsistent values.  
+  - **Fix**:  
+    - Make the client connect to the **same node** for every request, or  
+    - Delay the second read until replicas catch up.  
+
+- **Read Your Writes**  
+  - Once a client writes `x`, later reads of `x` must return that value or a newer one.  
+  - **Issue**: The first write has not yet propagated to all replicas.  
+  - **Fix**:  
+    - Stick with one node (write + read), or  
+    - Delay subsequent reads until replicas are updated.  
+
+- **Monotonic Writes**  
+  - If a client issues two writes to `x`, the system must ensure the first write is applied before the second.  
+  - **Issue**: The first write has not yet reached a replica when the second write is sent to a different node.  
+  - **Fix**:  
+    - Enforce **write ordering** by routing all writes for the same client/key to the same node, or  
+    - Use a coordination mechanism (e.g., version vectors, Lamport clocks) to order writes.  
+
+---
+
+### Alternatives for Achieving Consistency
+1. **Client directs all requests to one replica node**  
+   - Simple to implement.  
+  - Risky if that node fails (single point of failure).  
+
+2. **Client waits for synchronization across the system**  
+  - Guarantees global consistency.  
+  - Increases latency; simplest approach is to send the request to **all nodes** and wait for confirmation.  
+
+### What if a DHT Replica Fails?
+
+In a **Distributed Hash Table (DHT)**, data is assigned to nodes based on the hash of the key.  
+When a replica (or node) fails, several issues and strategies arise:
+
+---
+
+#### Issues
+- **Lost availability**: Keys assigned to that node become temporarily inaccessible.  
+- **Inconsistency**: If the failed replica had not synchronized with others, the latest writes may be lost.  
+- **Load imbalance**: Remaining nodes must take over responsibility for the missing hash range.  
+
+---
+
+#### Common Strategies
+
+1. **Replication Factor (r replicas per key)**  
+   - Each key is stored on multiple nodes (not just one).  
+   - Example: store `key → value` on the node responsible + next `r-1` successors on the hash ring.  
+   - If one replica fails, other replicas still serve requests.  
+
+2. **Successor/Predecessor Lists (Consistent Hashing)**  
+   - Each node maintains knowledge of its neighbors in the hash ring.  
+   - If a node fails, its successor or predecessor takes over responsibility for its key range.  
+
+3. **Re-replication / Repair**  
+   - When failure is detected, the system automatically **re-replicates** missing keys to new healthy nodes.  
+   - Background processes (e.g., *anti-entropy*, *Merkle tree sync*) periodically check and restore consistency.  
+
+4. **Quorum Protocols (N, R, W model)**  
+   - `N`: total replicas per key  
+   - `R`: minimum replicas that must respond for a read  
+   - `W`: minimum replicas that must acknowledge a write  
+   - As long as `R + W > N`, strong consistency can be ensured even with failures.  
+
+---
+
+### Another Way of Looking at Consistency
+
+- A distributed system is **linearizable** if the partial ordering of actions is preserved globally.  
+- Each actor (client/node) knows the order of its **own operations**.  
+- Together, these define a **partial order** of all events.  
+- Any global serialization (a single logical timeline of events) must be **consistent with each actor’s local order**.  
+- Different observers may see different valid serializations, but each must respect the individual constraints.  
