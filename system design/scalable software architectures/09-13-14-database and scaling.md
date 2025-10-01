@@ -289,3 +289,245 @@ When a replica (or node) fails, several issues and strategies arise:
 - Together, these define a **partial order** of all events.  
 - Any global serialization (a single logical timeline of events) must be **consistent with each actor’s local order**.  
 - Different observers may see different valid serializations, but each must respect the individual constraints.  
+
+---
+
+## Part 4. Choosing a Database
+
+---
+
+### SQL Relational Database
+- Data is organized into **tables**, with **foreign keys** to establish relationships.  
+- Supports **transactions**:  
+  - A sequence of operations is committed **all-or-none** (ACID properties).  
+- **Write scalability**:  
+  - Writes typically must go through **one master node**.  
+  - Horizontal write scaling is difficult (requires sharding).  
+- **Read scalability**:  
+  - Read-replicas can help scale read performance, but with some replication **delay/lag**.  
+- Best suited for:  
+  - Strong consistency requirements.  
+  - Applications that need **complex queries** (JOINs, aggregations).  
+  - Structured, relational data with well-defined schemas.  
+
+---
+
+### Transactions on Distributed (NoSQL) DB
+- Transactions are less common on NoSQL DBs because **coordination is slow** across many nodes.  
+- A transaction-like behavior can be implemented by **locking** the key.  
+- All replicas must agree to the lock before allowing the write.  
+
+---
+
+### How to Implement a Distributed Lock?
+
+1. **Centralized Lock Service**  
+   - Use a single coordination service to manage locks.  
+   - Examples: **ZooKeeper**, **etcd**, **Consul**.  
+   - Clients request a lock from the service → the service grants it if available.  
+
+2. **Database-based Locking**  
+   - Use the underlying database to simulate locks.  
+   - Example: In Redis, use `SET key value NX PX <timeout>` to create a lock.  
+   - Must handle lock expiry and renewal carefully (avoid deadlocks).  
+   - **Redlock algorithm** (by Redis) improves reliability using multiple Redis instances.  
+
+3. **Quorum-based Locking**  
+   - Lock is considered acquired if a majority (`> N/2`) of nodes agree.  
+   - Ensures fault tolerance if some nodes are down.  
+   - Similar to quorum reads/writes (`R + W > N`) in distributed databases.  
+
+4. **Leases with Expiration**  
+   - Instead of permanent locks, use **time-limited leases**.  
+   - If the client crashes, the lock will eventually expire, avoiding deadlock.  
+
+---
+
+### Throughput / Scaling Limitations
+
+---
+
+#### SQL Relational Database
+- **Write bottleneck**:  
+  - All writes must go to the **primary** node.  
+  - This limits throughput since a single machine becomes the bottleneck.  
+- **Read scaling**:  
+  - Read-replicas can increase read throughput.  
+  - However, replication introduces **delay/lag**, so replicas may return stale data.  
+- **Sharding**:  
+  - Can help with write scaling, but requires manual partitioning and complicates queries (especially JOINs).  
+
+---
+
+#### NoSQL and Scalable Stores
+Many modern databases and storage systems use **data partitioning** (often via hashing or consistent hashing) to scale horizontally:  
+
+- **Column-oriented DB** (e.g., Cassandra, HBase)  
+  - Data distributed across nodes by partition key.  
+  - Scales writes and reads horizontally.  
+
+- **Search Engines** (e.g., Elasticsearch, Solr)  
+  - Indexes are **sharded** across multiple nodes.  
+  - Queries are distributed, results merged.  
+
+- **Document Stores** (e.g., MongoDB, CouchDB)  
+  - Documents distributed across shards by key.  
+  - Provides horizontal scalability.  
+
+- **Distributed Cache** (e.g., Redis Cluster, Memcached)  
+  - Keys hashed across multiple nodes.  
+  - Enables linear scalability for cache reads/writes.  
+
+- **Cloud Object Stores** (e.g., Amazon S3, GCS, Azure Blob)  
+  - Objects stored in a distributed manner with hashing + replication.  
+  - Effectively infinite scaling in throughput and capacity.  
+
+- **Cluster File Systems** (e.g., HDFS, Ceph, Lustre)  
+  - Files split into blocks distributed across many nodes.  
+  - Provides fault tolerance and high throughput for big data workloads.  
+
+---
+
+#### Networked Filesystem vs. RAID
+- **Networked Filesystem** (e.g., NFS)  
+  - **One machine** provides storage, multiple clients access it over a network.  
+  - Scaling limited by the performance of the single server.  
+
+- **RAID (Redundant Array of Independent Disks)**  
+  - **One machine, many disks**.  
+  - Improves throughput and reliability via striping, mirroring, or parity.  
+  - Scaling limited by the controller and the single machine boundary.  
+
+---
+
+### OLTP (Online Transaction Processing) & OLAP (Online Analytical Processing)
+
+---
+
+#### OLTP – Online Transaction Processing
+- **Purpose**: Manage day-to-day transactional data.  
+- **Characteristics**:  
+  - Many short, simple queries (INSERT, UPDATE, DELETE).  
+  - Handles large numbers of concurrent users.  
+  - Requires **ACID compliance** for correctness.  
+- **Schema**: Highly normalized to reduce redundancy and maintain integrity.  
+- **Workload Example**:  
+  - E-commerce order system.  
+  - Banking transactions.  
+  - Reservation systems.  
+
+---
+
+#### OLAP – Online Analytical Processing
+- **Purpose**: Analyze large volumes of historical/aggregated data.  
+- **Characteristics**:  
+  - Complex queries with aggregations, joins, and scans.  
+  - Few concurrent users, but queries are computationally intensive.  
+  - Focused on **read-heavy workloads** and multidimensional analysis.  
+- **Schema**: Often denormalized for query efficiency (star schema, snowflake schema).  
+- **Workload Example**:  
+  - Business intelligence dashboards.  
+  - Data warehousing queries.  
+  - Trend and pattern analysis.  
+
+---
+
+#### Key Differences
+
+| Feature              | OLTP                                | OLAP                                   |
+|----------------------|-------------------------------------|----------------------------------------|
+| **Goal**             | Real-time transactions              | Historical data analysis                |
+| **Queries**          | Short, simple, frequent             | Long, complex, analytical               |
+| **Data**             | Current, operational                | Historical, aggregated                  |
+| **Users**            | Thousands of concurrent users       | Dozens of analysts/data scientists      |
+| **Schema**           | Normalized (3NF)                    | Denormalized (Star/Snowflake)           |
+| **Performance**      | Fast response for single records    | Fast scanning/aggregation of large sets |
+| **Examples**         | ATM withdrawal, online purchase     | Sales forecasting, customer segmentation |
+
+---
+
+**Summary**:  
+- **OLTP** = optimize for **fast, reliable transactions** (operational systems).  
+- **OLAP** = optimize for **complex analytics on big data** (decision-making systems).  
+
+---
+
+### Distributed Data Store Comparison
+
+---
+
+#### MongoDB
+- **Type**: JSON document store.  
+- **Strengths**:  
+  - Schema-less, flexible for evolving data structures.  
+  - Optimized for frequent **document updates**.  
+  - Supports **replication** and **sharding** for scalability.  
+  - Can maintain **change history** (via versioning or separate collections).  
+- **Best use cases**:  
+  - Content management systems.  
+  - User profiles with dynamic fields.  
+  - Applications needing flexible schema design.  
+
+---
+
+#### Elasticsearch
+- **Type**: JSON document store + distributed search/analytics engine.  
+- **Strengths**:  
+  - Stores documents and builds an **inverted index** → maps words to their locations in documents.  
+  - Optimized for **full-text search** and complex queries.  
+  - Supports aggregations, filtering, and near real-time search.  
+  - Scales horizontally with sharding and replication.  
+- **Best use cases**:  
+  - Log and event analytics (ELK/Elastic stack).  
+  - Full-text search in applications (e.g., e-commerce, websites).  
+  - Monitoring, observability, and analytics dashboards.  
+
+---
+
+#### Cassandra (2D Key-Value Store / Wide-Column Store)
+- **Data model**:  
+  - Each **row** is identified by a **primary key**.  
+  - Each row can have a dynamic set of **columns** (key-value pairs).  
+  - Effectively, it’s a **map of maps** (row key → {column key → value}).  
+- **Strengths**:  
+  - Designed for **high write throughput** and **linear scalability**.  
+  - Fault-tolerant with replication across multiple data centers.  
+  - Tunable consistency: developers can choose between strong vs eventual consistency (`R + W > N` model).  
+- **Limitations**:  
+  - Not ideal for complex queries or ad-hoc joins.  
+  - Query patterns must be known in advance and optimized via schema design.  
+- **Best use cases**:  
+  - Time-series data.  
+  - IoT sensor data ingestion.  
+  - Applications needing high availability across multiple regions.  
+
+![Cassandra Schema Example](https://www.researchgate.net/publication/301630614/figure/fig5/AS:628782226497538@1526924773756/Data-schema-of-bridge-information-model-on-Apache-Cassandra.png)
+
+---
+
+#### Redis (In-Memory Key-Value Store)
+- Data stored in **RAM** → ultra-low latency.  
+- Supports strings, hashes, lists, sets, sorted sets.  
+- Can act as **cache** or **ephemeral DB**.  
+- Expiration policies for items.  
+
+---
+
+### Distributed Caches
+- Examples: Redis, Memcached, ElastiCache, Riak.  
+- Store data in **RAM across nodes**.  
+- Provide **linear scalability** for reads/writes.  
+
+**Comparison**:
+- **NoSQL DB** → persistent, disk + RAM, scale is the goal.  
+- **Distributed Cache** → ephemeral, RAM-based, expiration common.  
+- **CDN** → caches common HTTP responses globally.  
+
+---
+
+### Hadoop Distributed File System (HDFS)
+- Designed for **big data analytics**.  
+- Moves computation **to where the data is**, instead of moving huge datasets across the network.  
+- Splits files into blocks, distributed across commodity hardware.  
+- Fault tolerance via replication (default 3 copies).  
+- Backbone of Hadoop ecosystem (MapReduce, Spark).  
