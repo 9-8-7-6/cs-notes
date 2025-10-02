@@ -36,8 +36,8 @@
 ## Resource-Allocation Graph (RAG)
 
 - **Vertices**:  
-- Processes (circles)  
-- Resources (squares)  
+1. Processes (circles)  
+2. Resources (squares)  
 
 - **Edges**:  
 1. **Request edge**: `P → R`  
