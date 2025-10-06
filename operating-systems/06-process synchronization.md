@@ -355,7 +355,7 @@ semaphore readTry  = 1;  // gate readers pass through; writers hold to block new
 semaphore rmutex   = 1;  // protects readcount from many readers change to race condition
 semaphore wmutex   = 1;  // protects writecount from many writers change to race condition
 int readcount  = 0;   // Numbers of readers reading
-int writecount = 0;   // Bynbers of writers waiting or writing
+int writecount = 0;   // Numbers of writers waiting or writing
 
 // --- writer has priority ---
 Writer() {
