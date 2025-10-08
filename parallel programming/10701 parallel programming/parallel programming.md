@@ -127,3 +127,93 @@ They are designed to **match** the underlying computer architecture but are **no
 - Widely used parallel programming frameworks/languages include:  
   - **OpenMP**, **MPI**, **Pthreads**, **CUDA**.  
 - **Understanding parallel computing concepts** is more important than just learning parallel programming syntax.  
+
+---
+
+### HPL Benchmark
+- Measures the **floating-point rate of execution**.  
+- Solves a large **linear system of equations** \( Ax = b \).  
+- Performs **LU factorization** via **panel factorization**.  
+- Divides the matrix into **multiple sub-blocks (tiles)** for distributed parallel computation.  
+
+---
+
+### Limitation of General-Purpose CPU
+- A **general-purpose CPU** is flexible and capable of handling various tasks,  
+  but its architecture is **not optimized** for specific high-performance workloads.  
+- The **memory bandwidth** between the processor and main memory can become  
+  a **bottleneck**, limiting overall computational performance.  
+
+---
+
+### NVIDIA General-Purpose GPU (GPGPU)
+- Extends the **GPU** beyond graphics to act as a **stream processor (vector processor)** for general-purpose computing.  
+- Well-suited for **embarrassingly parallel tasks** and **vectorized operations**.  
+- Built on the **CUDA architecture**, allowing developers to write massively parallel programs in C/C++/Fortran.  
+- Functions as an **accelerator** or **co-processor** working alongside the CPU (**host**).  
+- Typical workflow: **Host → Input Assembler → Thread Execution Manager → Processing Units (PBSM)**.  
+- Employs **Global Memory** and **Constant Memory**, shared among many threads for coordinated data access.  
+- **Scheduling** is handled **entirely by hardware**, allowing thousands of threads to execute concurrently.  
+- The **memory access speed** often becomes the **performance bottleneck**, especially for memory-bound applications.  
+
+### Intel Xeon Phi
+- A **many-core processor** that runs **x86 instructions**, just like a standard Intel CPU.
+- Can execute **Intel assembly code**, making it easier to port existing CPU-based applications.
+- Operates under a **lightweight embedded Linux OS**, allowing direct execution of user applications.  
+- Designed for **highly parallel workloads** such as scientific computing and simulations.  
+
+---
+
+### Google Tensor Processing Unit (TPU)
+- A **domain-specific accelerator** designed by Google for **deep learning workloads** (especially TensorFlow).  
+- Optimized for **matrix (tensor) operations**, focusing on **2D multiply-accumulate** computations.  
+- Uses a **systolic array architecture**, enabling massive parallelism for neural network operations.  
+- Unlike a CPU (which processes one element at a time), a TPU processes **entire matrices simultaneously**.  
+- Provides extremely high **throughput** and **energy efficiency** for training and inference tasks.  
+
+---
+
+## Communication
+- Data transfer between nodes (servers) is typically far slower than computation speed inside a CPU.  
+- Communication is common to parallel programs.
+- Synchronization is expensive and grow exponentially as the number of servers increase.
+- More nodes are equal to more latency, more potential bottlenecks.
+
+---
+
+## Interconnection Networks
+An **interconnection network** is the communication backbone that connects processors, memory modules, and I/O devices in a parallel or distributed system.
+
+### Design Considerations
+- **Scalability** – How easily can more nodes be added without major performance drops.  
+- **Performance** – Measured in bandwidth and latency; higher is better.  
+- **Resilience** – The ability to tolerate node or link failures (fault tolerance).  
+- **Cost** – Hardware (switches, cables) and power consumption must remain economical.
+
+---
+
+## Interconnection Network Topology
+Topology defines **how nodes are connected** to each other.
+
+- **Network diameter** – The longest shortest path between any two nodes; smaller diameter = faster communication.  
+- **Re-routing path for fault tolerance** – Alternate paths allow communication to continue even if a link fails.  
+- **Fan-in / Fan-out degree per node** – Number of input/output connections each node can handle.
+
+Common topologies include:
+- **Bus** – Simple shared medium (low cost, low scalability).  
+- **Ring** – Each node connects to two neighbors.  
+- **Mesh / Torus** – Nodes arranged in 2D or 3D grids.  
+- **Tree / Fat Tree** – Hierarchical, good for data centers.  
+- **Hypercube** – High connectivity, low diameter.  
+- **Fully connected** – Fastest but most expensive.
+
+---
+
+## Network Devices
+Hardware components used to implement interconnection networks:
+
+- **Cable** : Physical link for data transmission.
+- **Switch** : Routes packets between nodes.
+- **Network Adapter** : Interface between node and network.
+
+---
