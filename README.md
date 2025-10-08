@@ -14,6 +14,9 @@
 ### Parallel Programming
 - Notes from the [Operating System open course](https://www.youtube.com/playlist?list=PLS0SUwlYe8cxqw70UHOE5n4Lm-mXFXbZT)  by Prof. 周志遠 (National Tsing Hua University).
 
+### Computer Artecture
+- Note from the [Computer Artecture](https://www.youtube.com/playlist?list=PLS0SUwlYe8czszh6M74JCU0mIUL_ymBbe) by prof. 黃婷婷 (National Tsing Hua University).
+
 ### Development-Notes
 - Testing
     - Unit test
