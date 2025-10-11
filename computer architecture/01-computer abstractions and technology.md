@@ -54,3 +54,64 @@ In a CMOS NAND gate,
 ![CMOS NAND](https://www.ic-components.com/upfile/images/77/20240703134504908.png)
 
 ---
+
+## Basic Organization of a Computer
+### Processor (CPU)
+The **processor** is the active element responsible for executing instructions and controlling the overall operation of the computer.
+
+- **Control Unit**  
+  - Directs the flow of data between components.  
+  - Interprets program instructions and generates control signals.  
+  - Coordinates the operation of the datapath, memory, and I/O devices.
+
+- **Datapath**  
+  - Performs actual data processing operations (e.g., arithmetic and logic).  
+  - Includes components such as:
+    - **ALU (Arithmetic Logic Unit)** — performs computations.  
+    - **Registers** — store temporary data and intermediate results.  
+    - **Buses** — transfer data among processor components.
+
+---
+
+### Memory (Passive Component)
+- Stores **instructions** and **data** used by the processor.  
+- Considered “passive” because it only supplies or accepts data when requested by the processor.  
+- Organized into a **memory hierarchy** (registers → cache → main memory → secondary storage) to balance speed and capacity.
+
+---
+
+### Devices (I/O System)
+- Allow the computer to **interact with the external environment**.  
+- Examples include:
+  - **Input devices** — keyboard, mouse, sensors.  
+  - **Output devices** — display, printer, actuators.  
+  - **Storage devices** — SSDs, HDDs, networked storage.  
+- Managed by the **I/O subsystem** and often communicate through buses or dedicated controllers.
+
+---
+
+## What is Computer Architecture?
+
+**Computer Architecture** describes how computer systems are designed, structured, and operate —  
+from the instruction level seen by programmers down to the hardware mechanisms that execute those instructions.
+
+---
+
+### Core Definition
+**Computer Architecture = Instruction Set Architecture (ISA) + Machine Organization**
+
+- **Instruction Set Architecture (ISA)**  
+  - The abstract interface between software and hardware.  
+  - Defines the machine’s instructions, registers, data types, addressing modes, and memory access methods.  
+  - Determines how software communicates with and controls the hardware.
+
+- **Machine Organization**  
+  - The internal implementation of the ISA.  
+  - Includes components such as datapath, control unit, cache, and I/O subsystems.  
+  - Focuses on **performance**, **efficiency**, and **hardware resource coordination**.
+
+---
+
+### Program Translation and Execution Flow
+
+**High-Level Language Program → [Compiler] → Assembly Language Program → [Assembler] → Machine Language → [Machine Interpretation] → Control Signal Specification (Hardware Level)**
