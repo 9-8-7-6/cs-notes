@@ -217,3 +217,104 @@ Hardware components used to implement interconnection networks:
 - **Network Adapter** : Interface between node and network.
 
 ---
+
+## Network Topology
+
+- **Diameter (Latency)**  
+  The maximum number of hops between any two nodes in the network.  
+  Smaller diameter → lower latency.
+
+- **Bisection (Resilience)**  
+  The minimum number of links that must be removed to divide the network into two disconnected parts.  
+  Higher bisection → better fault tolerance.
+
+- **Links (Cost)**  
+  The total number of physical links required to connect all nodes.  
+  More links → higher cost but potentially higher performance.
+
+---
+
+### Common Topologies
+
+- **Linear Array**  
+  - Simplest and cheapest design.  
+  - Nodes connected in a straight line.  
+  - High latency and poor reliability — a single link failure can partition the network.
+
+- **Ring**  
+  - Each node connected to two neighbors, forming a closed loop.  
+  - Moderate reliability — can reroute traffic in the opposite direction if one link fails.  
+  - Suitable for small to medium systems.
+
+- **Tree**  
+  - Hierarchical structure with parent-child relationships.  
+  - Scalable and easy to expand.  
+  - Vulnerable to root or upper-level link failures.
+
+- **2-D Mesh**  
+  - Nodes arranged in a grid; each connected to up to four neighbors (north, south, east, west).  
+  - Good balance of latency, scalability, and reliability.  
+  - Common in modern multi-core and distributed systems.
+
+- **Torus**  
+  - An extension of the 2-D mesh where opposite edges are connected, forming a “wrap-around” network.  
+  - Every node has the same number of neighbors, maintaining uniform latency.  
+  - Reduces edge congestion compared to mesh topology.  
+  - Frequently used in large-scale parallel supercomputers.
+
+- **Hypercube**  
+  - A multidimensional cube topology with \( N = 2^k \) nodes, where each node connects to \( k = \log_2 N \) other nodes.  
+  - Short average path length — at most \( k \) hops between any two nodes.  
+  - High connectivity and fault tolerance.  
+  - Complex wiring and expensive implementation for large systems.  
+  - Common in parallel computers and message-passing multiprocessors (e.g., network switches or interconnect fabrics).
+
+---
+
+![Network Topology](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShvr9FdmKNDoUqUF9v9rImarZwRG478Caaew&s)
+
+---
+
+### InfiniBand
+
+- A **computer network communication link protocol** used in **high-performance computing (HPC)**, featuring **very high throughput** and **low latency**.  
+- More used in shared environments, **InfiniBand reservations take priority** to ensure deterministic performance.  
+- Based on **RDMA (Remote Direct Memory Access)** , which allows data to be transferred **directly between memory buffers** of different nodes **without involving the CPU or operating system**, reducing overhead and latency.  
+- Commonly used as the **interconnect fabric** in **supercomputers**, **AI clusters**, and **large-scale distributed systems**.  
+
+---
+
+## I/O & Storage Technology
+
+### Parallel File and I/O Systems
+- Designed to handle **large-scale concurrent data access** in high-performance computing (HPC) environments.  
+- Distribute both data and metadata across multiple storage servers to increase throughput and scalability.  
+- Common implementations:
+  - **Lustre File System** — a widely used parallel file system in supercomputers.  
+  - **MPI-IO** — a standardized parallel I/O interface defined by MPI, enabling coordinated data access among processes.  
+- Components:
+  - **OST (Object Storage Target)** — stores actual file data.  
+  - **MDS (Metadata Server)** — manages metadata such as file names, directories, and access permissions.  
+- Storage typically contains:
+  - **Metadata** — information about file structure and access.  
+  - **Dictionary data** — mapping between logical and physical storage layout.
+
+---
+
+### Burst Buffering
+- Introduces **non-volatile memory (NVRAM)** at I/O server nodes to act as a **temporary buffer**.  
+- Purpose:
+  - Smooth out **burst traffic patterns** caused by simultaneous I/O requests from many compute nodes.  
+  - Improve overall **I/O performance** and **reduce storage latency**.  
+- Data flow:
+  - Data first transferred from **I/O node (server layer)** → **storage node** after buffering.  
+- Characteristics:
+  - **Buffers reside in I/O nodes**, decoupling compute and storage timing.  
+  - Enables **steady throughput**, facilitating **I/O scheduling and reservation**.  
+  - Uses **non-volatile memory (NVRAM)** — provides large capacity and **data persistence** even after system faults.
+
+**Summary:**  
+Parallel file systems and burst buffering are essential components of HPC I/O architecture, combining distributed data access with temporary buffering to achieve both **high bandwidth** and **low latency** in data-intensive workloads.
+
+---
+
