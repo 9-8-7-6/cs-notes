@@ -318,3 +318,46 @@ Parallel file systems and burst buffering are essential components of HPC I/O ar
 
 ---
 
+## Parallel Program Analysis
+
+### Speedup Factor
+- Program speedup factor: S(p) = Ts / Tp, Ts: execution time using BSET sequential algorithm, Tp: execution time using p processor
+- Linear speedup: S(p) = p.
+  - ideal maximum speedup in the theory.
+- Superlinear speedup: S(p) > p
+  - Extra Hardware resource(i.g. memory).
+  - SW or HW optimization(i.g. caching).
+- System efficiency: E(p) = Ts / (Tp * p) = s(p) / p * 100%.
+
+## 2. Maximum Speedup
+
+Achieving the ideal \( S(p) = p \) is challenging because:
+- Not every part of the computation can be parallelized (some processors remain idle).  
+- Parallel versions often require **extra computation** for data partitioning or synchronization.  
+- **Communication overhead** between processes is typically the dominant performance bottleneck.
+
+### Strong Scaling
+- The problem size stays fixed but the number of processing elements are increased.
+- It is used to find the **sweet spot** that allows the computation to complete in a reasonable amount of time.
+- Core must be large enough to achive strong scaling.
+- Communicateion overhead may increase as the scale increase so hard to achieve.
+
+### Weak Scaling
+- The **workload per processor** remains constant as the number of processors increases.  
+- **Linear weak scaling** occurs when runtime stays constant while total workload increases proportionally.  
+- Easier to achieve than strong scaling since each processor handles a fixed workload.  
+- **External communication** decreases, but **internal communication** among processors increases.
+
+---
+
+### Time Complexity Analysis
+- Tp = Tcomp + Tcomm
+  - Tp: Total execution time of a parallel algorithm
+  - Tcomp: Computation part
+  - Tcomm: Communication part
+
+- Tcomm = q(Tstartup + nTdata)
+  - Tstartup = Message latency (assumed constant)
+  - Tdata = Transmission time per data item
+  - n = Number of data items per message
+  - q = Number of messages sent
