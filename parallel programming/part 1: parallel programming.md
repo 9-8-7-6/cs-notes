@@ -151,7 +151,7 @@ They are designed to **match** the underlying computer architecture but are **no
 - Well-suited for **embarrassingly parallel tasks** and **vectorized operations**.  
 - Built on the **CUDA architecture**, allowing developers to write massively parallel programs in C/C++/Fortran.  
 - Functions as an **accelerator** or **co-processor** working alongside the CPU (**host**).  
-- Typical workflow: **Host → Input Assembler → Thread Execution Manager → Processing Units (PBSM)**.  
+- Typical workflow: **Host -> Input Assembler -> Thread Execution Manager -> Processing Units (PBSM)**.  
 - Employs **Global Memory** and **Constant Memory**, shared among many threads for coordinated data access.  
 - **Scheduling** is handled **entirely by hardware**, allowing thousands of threads to execute concurrently.  
 - The **memory access speed** often becomes the **performance bottleneck**, especially for memory-bound applications.  
@@ -222,15 +222,15 @@ Hardware components used to implement interconnection networks:
 
 - **Diameter (Latency)**  
   The maximum number of hops between any two nodes in the network.  
-  Smaller diameter → lower latency.
+  Smaller diameter -> lower latency.
 
 - **Bisection (Resilience)**  
   The minimum number of links that must be removed to divide the network into two disconnected parts.  
-  Higher bisection → better fault tolerance.
+  Higher bisection -> better fault tolerance.
 
 - **Links (Cost)**  
   The total number of physical links required to connect all nodes.  
-  More links → higher cost but potentially higher performance.
+  More links -> higher cost but potentially higher performance.
 
 ---
 
@@ -307,7 +307,7 @@ Hardware components used to implement interconnection networks:
   - Smooth out **burst traffic patterns** caused by simultaneous I/O requests from many compute nodes.  
   - Improve overall **I/O performance** and **reduce storage latency**.  
 - Data flow:
-  - Data first transferred from **I/O node (server layer)** → **storage node** after buffering.  
+  - Data first transferred from **I/O node (server layer)** -> **storage node** after buffering.  
 - Characteristics:
   - **Buffers reside in I/O nodes**, decoupling compute and storage timing.  
   - Enables **steady throughput**, facilitating **I/O scheduling and reservation**.  
@@ -361,3 +361,157 @@ Achieving the ideal \( S(p) = p \) is challenging because:
   - Tdata = Transmission time per data item
   - n = Number of data items per message
   - q = Number of messages sent
+
+---
+
+## MPI (Message Passing Interface)
+
+### Overview
+- **Definition:** A specification for message passing libraries.
+- **Purpose:** Commonly used for distributed memory systems and high-performance computing.
+- **Architecture:**
+  - MPI Programmer (Program) -> **MPI Interface** -> MPI Developer (MPI Library: MPICH)
+- **Goals:**
+  - **Portable:** Run on different machines.
+  - **Scalable:** Run on millions of compute nodes.
+  - **Flexible:** Isolate MPI developers from MPI programmers (users).
+
+---
+
+### Programming Model
+
+#### SPMD (Single Program Multiple Data)
+- All tasks run the same program but may execute different parts based on their role.
+- Tasks can conditionally branch to perform different operations.
+- MPI tasks cannot be dynamically spawned during runtime.
+- Each task is assigned a unique ID when the library creates it.
+
+#### Distributed Memory
+- Each process has its own memory space.
+- MPI provides methods for sending and receiving messages between these processes.
+
+---
+
+### Communication Methods
+
+#### View from Communicated Processes
+- **Synchronous Communication:**  
+  Sending and receiving occur simultaneously.
+- **Asynchronous Communication:**  
+  Sending and receiving occur independently at different times.
+
+#### View from Function Calls
+- **Blocking:**  
+  The routine does not return until the data transfer is completed.
+- **Non-Blocking:**  
+  The routine returns immediately, allowing the program to continue execution.
+
+#### Synchronous / Blocking Message Passing
+- **Sender:** Waits until the entire message is accepted by the receiver.  
+- **Receiver:** Waits until the expected message arrives.
+
+#### Asynchronous / Non-Blocking Message Passing
+- Uses a **message buffer** as temporary memory space to hold messages.
+- Buffers are managed by the MPI library.
+
+---
+
+### MPI API
+
+#### MPI Calls
+- **Format:**  
+  `rc = MPI_XXX(parameter, ...)`
+- **Initialization and Termination:**  
+  Must call `MPI_Init()` before any MPI function and `MPI_Finalize()` at the end.
+- **Error Handling:**  
+  Return value `rc = MPI_SUCCESS` if successful.
+- **Arguments:**  
+  Some arguments are passed by pointer; others are returned by value.
+
+#### Communicators and Groups
+- A **group** defines the collection of processes that can communicate with each other.
+- Each group is associated with a **communicator**.
+- `MPI_COMM_WORLD` is the predefined communicator that includes all processes.
+
+#### Rank
+- Each process has a **unique identifier** (task ID) within a communicator.
+- Ranks start from zero and are contiguous.
+- Used to distinguish between different processes.
+
+---
+
+### Environment Management Routines
+
+- **`MPI_Init()`**  
+  Initializes the MPI execution environment.
+
+- **`MPI_Finalize()`**  
+  Terminates the MPI execution environment.
+
+- **`MPI_Comm_size(comm, &size)`**  
+  Determines the number of processes in the communicator group.
+
+- **`MPI_Comm_rank(comm, &rank)`**  
+  Determines the rank (task ID) of the calling process within the communicator.  
+  The rank identifies which process is executing.
+
+---
+ 
+### Point-to-Point Communication Routines
+
+MPI provides routines for sending and receiving messages between individual processes. These routines can be **blocking** or **non-blocking** depending on whether they wait for communication to complete before returning.
+
+---
+
+#### Blocking Communication
+- **Send:**  
+  `MPI_Send(buffer, count, type, dest, tag, comm)`
+- **Receive:**  
+  `MPI_Recv(buffer, count, type, source, tag, comm, status)`
+
+Blocking routines return only after the corresponding operation (send or receive) has completed.
+
+---
+
+#### Non-Blocking Communication
+- **Send:**  
+  `MPI_Isend(buffer, count, type, dest, tag, comm, request)`
+- **Receive:**  
+  `MPI_Irecv(buffer, count, type, source, tag, comm, request)`
+
+Non-blocking routines return immediately, allowing the program to continue execution while the operation completes in the background.  
+The completion of these operations can later be checked using the **request** handle.
+
+---
+
+#### Parameters
+
+- **buffer**  
+  Address of the memory space containing the data to be sent or received.  
+  Must be allocated before calling MPI routines.
+
+- **count**  
+  Number of data elements (of the specified type) to send or receive.
+
+- **type**  
+  Data type of elements. Examples:  
+  `MPI_CHAR`, `MPI_SHORT`, `MPI_INT`, `MPI_LONG`, `MPI_DOUBLE`, etc.
+
+- **comm**  
+  Communicator that defines the context for communication (e.g., `MPI_COMM_WORLD`).
+
+- **source / dest**  
+  Rank (task ID) of the sending or receiving process.
+
+- **tag**  
+  Arbitrary non-negative integer assigned by the programmer to identify messages.  
+  The sender and receiver must use matching tags for successful communication.  
+  `MPI_ANY_TAG` can be used as a wildcard for receiving.
+
+- **status**  
+  Contains information about a completed receive operation (e.g., message source, tag, count).
+
+- **request**  
+  Handle used by non-blocking operations to track progress or completion status.
+
+---
