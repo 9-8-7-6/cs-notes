@@ -474,6 +474,9 @@ Blocking routines return only after the corresponding operation (send or receive
 ---
 
 #### Non-Blocking Communication
+- Provide better performance because it allows **overlapping computation and communication**.  
+- continue performing useful work while data is being transferred in the background, leading to improved efficiency on distributed systems.
+
 - **Send:**  
   `MPI_Isend(buffer, count, type, dest, tag, comm, request)`
 - **Receive:**  
@@ -515,3 +518,77 @@ The completion of these operations can later be checked using the **request** ha
   Handle used by non-blocking operations to track progress or completion status.
 
 ---
+
+## Collective Communication Routines
+
+Collective communication routines involve **all processes** within a communicator.  
+Unlike point-to-point communication, collective routines synchronize data exchange or computation across multiple processes simultaneously.
+
+---
+
+### 1. `MPI_Barrier(comm)`
+- **Purpose:** Creates a synchronization barrier among all processes in a communicator.  
+- **Behavior:**  
+  - Each process blocks at the barrier until **all** processes have reached the same `MPI_Barrier` call.  
+  - Ensures all processes are synchronized before continuing execution.
+
+---
+
+### 2. `MPI_Bcast(&buffer, count, datatype, root, comm)`
+- **Purpose:** Broadcasts a message from one process (**root**) to all other processes in the communicator.  
+- **Behavior:**  
+  - The process with rank `root` sends the contents of its buffer to every other process.  
+  - Example:  
+    If `root = 1` and `count = 1`, the process with rank `1` broadcasts its buffer to all others.
+
+---
+
+### 3. `MPI_Scatter(&sendbuf, sendcnt, sendtype, &recvbuf, recvcnt, recvtype, root, comm)`
+- **Purpose:** Distributes **different portions of data** from one root process to all processes in the group.  
+- **Behavior:**  
+  - The root’s `sendbuf` is divided into segments, each sent to a corresponding process.  
+  - Each process receives its segment into its `recvbuf`.  
+  - Conceptually: `sendbuf → recvbuf (per process)`
+
+---
+
+### 4. `MPI_Gather(&sendbuf, sendcnt, sendtype, &recvbuf, recvcnt, recvtype, root, comm)`
+- **Purpose:** Collects data from all processes and gathers them into one destination process (the **root**).  
+- **Behavior:**  
+  - Each process sends its local `sendbuf` to the root process.  
+  - The root combines all received data into its `recvbuf`.  
+  - Commonly used to aggregate computed results.  
+  - Conceptually: `sendbuf (from each process) → recvbuf (at root)`
+
+---
+
+### 5. `MPI_Reduce(&sendbuf, &recvbuf, count, datatype, op, dest, comm)`
+- **Purpose:** Performs a **reduction operation** (e.g., sum, max, min) across all processes and stores the result in one destination process.  
+- **Parameters:**  
+  - `op`: Operation type (e.g., `MPI_SUM`, `MPI_MAX`, `MPI_MIN`, etc.)  
+  - `dest`: The rank of the process where the reduced result is stored.  
+- **Example:**  
+  `dest = 2`, `count = 1`, `op = MPI_SUM` → all values are summed and stored in process rank 2.
+
+---
+
+### 6. `MPI_Allgather(&sendbuf, sendcount, sendtype, &recvbuf, recvcount, recvtype, comm)`
+- **Purpose:** Gathers data from all processes and distributes the complete result to **every** process.  
+- **Behavior:**  
+  - Each process collects data from all others.  
+  - Functionally equivalent to performing an `MPI_Gather` followed by an `MPI_Bcast`.  
+  - Every process ends up with the same concatenated result.
+
+---
+
+### 7. `MPI_Allreduce(&sendbuf, &recvbuf, count, datatype, op, comm)`
+
+- **Purpose:**  
+  Performs a **reduction operation** (such as sum, maximum, or minimum) across all processes in a communicator,  
+  and then **distributes the final result to every process**.
+
+- **Behavior:**  
+  - Each process provides its own input data in `sendbuf`.  
+  - MPI combines all the data across processes using the specified operation (`op`).  
+  - The result of this reduction is stored in `recvbuf` **on every process**, not just one.  
+  - Functionally equivalent to performing an `MPI_Reduce` followed by an `MPI_Bcast`.
