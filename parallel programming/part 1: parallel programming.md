@@ -709,3 +709,19 @@ Produces a new group by including a subset of members from an existing group.
   - Disadvantages:
     - Requests can be serialized when accessing the same OST (Object Storage Target).
     - May lead to write conflicts when accessing overlapping file regions.
+
+---
+
+## Shared-Memory Programming: Pthread
+
+### Shared-Memory Programming
+- Definition: Processes communicate or work together through a shared memory space which can be accessed by all processes.
+- Issues:
+  - Synchronization
+  - Deadlock
+  - Cache coherence
+- Techniques:
+  - Parallelizing compiler
+  - Unix processes
+  - Threads(Pthread, Java)
+
