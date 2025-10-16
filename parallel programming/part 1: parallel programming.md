@@ -263,7 +263,7 @@ Hardware components used to implement interconnection networks:
   - Frequently used in large-scale parallel supercomputers.
 
 - **Hypercube**  
-  - A multidimensional cube topology with \( N = 2^k \) nodes, where each node connects to \( k = \log_2 N \) other nodes.  
+  - A multidimensional cube topology with \( N = 2^k \) nodes, where each node connects to \( k = log_2 N \) other nodes.  
   - Short average path length — at most \( k \) hops between any two nodes.  
   - High connectivity and fault tolerance.  
   - Complex wiring and expensive implementation for large systems.  
@@ -307,7 +307,7 @@ Hardware components used to implement interconnection networks:
   - Smooth out **burst traffic patterns** caused by simultaneous I/O requests from many compute nodes.  
   - Improve overall **I/O performance** and **reduce storage latency**.  
 - Data flow:
-  - Data first transferred from **I/O node (server layer)** -> **storage node** after buffering.  
+  - **Compute nodes** -> **I/O nodes (NVRAM buffer)** -> **storage node**.  
 - Characteristics:
   - **Buffers reside in I/O nodes**, decoupling compute and storage timing.  
   - Enables **steady throughput**, facilitating **I/O scheduling and reservation**.  
@@ -321,7 +321,7 @@ Parallel file systems and burst buffering are essential components of HPC I/O ar
 ## Parallel Program Analysis
 
 ### Speedup Factor
-- Program speedup factor: S(p) = Ts / Tp, Ts: execution time using BSET sequential algorithm, Tp: execution time using p processor
+- Program speedup factor: S(p) = Ts / Tp, Ts: execution time using BEST sequential algorithm, Tp: execution time using p processor
 - Linear speedup: S(p) = p.
   - ideal maximum speedup in the theory.
 - Superlinear speedup: S(p) > p
@@ -443,17 +443,38 @@ Achieving the ideal \( S(p) = p \) is challenging because:
 ### Environment Management Routines
 
 - **`MPI_Init()`**  
-  Initializes the MPI execution environment.
+  Initializes(Set up) the MPI execution environment.
 
 - **`MPI_Finalize()`**  
-  Terminates the MPI execution environment.
+  Terminates(Tear down) the MPI execution environment.
 
 - **`MPI_Comm_size(comm, &size)`**  
-  Determines the number of processes in the communicator group.
+  Determines the total number of processes in the communicator group.
 
 - **`MPI_Comm_rank(comm, &rank)`**  
-  Determines the rank (task ID) of the calling process within the communicator.  
+  Determines the  rank (task ID) of the calling process within the communicator.  
   The rank identifies which process is executing.
+
+---
+
+#### Typical MPI Initialization
+
+``` C
+int main (int argc, char **argv) {
+  int num_procs;
+  int rank;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  printf("%d: hello (p=%d)\n", rank, num_procs);
+
+  /* Do many things, all at one */
+
+  MPI_Finalize();
+}
+
+```
 
 ---
  
@@ -592,3 +613,99 @@ Unlike point-to-point communication, collective routines synchronize data exchan
   - MPI combines all the data across processes using the specified operation (`op`).  
   - The result of this reduction is stored in `recvbuf` **on every process**, not just one.  
   - Functionally equivalent to performing an `MPI_Reduce` followed by an `MPI_Bcast`.
+
+---
+
+## Group and Communicator Routines
+
+MPI allows processes to be organized into **groups** and **communicators**, defining which processes can communicate with each other and within what context.
+
+### Group and Communicator Data Types
+- **`MPI_Group`**  
+  Represents a collection of processes. A group defines membership but does not allow direct communication.
+
+- **`MPI_Comm`**  
+  Represents a **communicator**, which enables communication among the processes in a group.  
+  (A communicator is always created based on a group.)
+
+---
+
+### 1. `MPI_Comm_group(Comm, &Group)`
+- **Purpose:**  
+  Extracts the **group** associated with a given communicator.
+- **Usage:**  
+  Since MPI provides a default communicator (`MPI_COMM_WORLD`), this call is often used to obtain the default group from it.
+- **Example:**  
+  ```c
+  MPI_Group group_world;
+  MPI_Comm_group(MPI_COMM_WORLD, &group_world);
+  ```
+
+### 2. `MPI_Group_incl(Group, size, ranks[], &NewGroup)`
+
+- Purpose:
+Produces a new group by including a subset of members from an existing group.
+
+- Parameters:
+- Group: The original group.
+- size: Number of processes to include in the new group.
+- ranks[]: Array of process ranks (within the original group) to include.
+- NewGroup: The resulting subgroup.
+
+- Example: 
+```c
+  int ranks[2] = {0, 1};
+  MPI_Group new_group;
+  MPI_Group_incl(group_world, 2, ranks, &new_group);
+```
+
+### 3. MPI_Comm_create(Comm, NewGroup, &NewComm)
+
+- Purpose:
+  Creates a new communicator for the specified group of processes.
+
+- Behavior:
+  - The new communicator must be a subset of the original communicator.
+  - Only the processes included in NewGroup can use NewComm for communication.
+
+- Example:
+```c
+  MPI_Comm new_comm;
+  MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_comm);
+```
+
+---
+
+## Data access
+
+### POSIX File Access
+- Model: 1-to-1 mapping between compute node and storage node.
+- Limitation:
+- Multiple processes writing to the same file may cause data inconsistency due to locking.
+- To perform concurrent writes, multiple files are typically required — this makes it hard to manage and wastes the potential of parallel file systems.
+
+### MPI-IO File Access
+- Function: MPI_FILE_open()
+  - MPI provides shared file handles and synchronizes access among processes via the MPI library.
+
+### MPI-IO Independent/Collective I/O
+
+- Collective I/O
+  - All processes participate in the I/O operation collectively.
+  - Data is gathered into a shared buffer, and a single file request is issued.
+  - The MPI library maintains an internal I/O buffer for coordination.
+  - Advantages:
+    - Reduces number of I/O requests.
+    - Efficient for small I/O.
+  - Disadvantages:
+    - Requires synchronization among processes.
+
+- Independent I/O
+  - Each process performs I/O independently.
+  - No synchronization with other processes.
+  - Each process issues its own file request.
+  - Advantages:
+    - Better suited for large, independent I/O.
+  - Disadvantages:
+    - Requests can be serialized when accessing the same OST (Object Storage Target).
+    - May lead to write conflicts when accessing overlapping file regions.
