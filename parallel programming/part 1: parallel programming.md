@@ -420,7 +420,7 @@ Achieving the ideal \( S(p) = p \) is challenging because:
 
 #### MPI Calls
 - **Format:**  
-  `rc = MPI_XXX(parameter, ...)`
+  `rc (return code) = MPI_XXX(parameter, ...)`
 - **Initialization and Termination:**  
   Must call `MPI_Init()` before any MPI function and `MPI_Finalize()` at the end.
 - **Error Handling:**  
@@ -724,4 +724,104 @@ Produces a new group by including a subset of members from an existing group.
   - Parallelizing compiler
   - Unix processes
   - Threads(Pthread, Java)
+
+### Pthread
+- **Pthread** is the implementation of the **POSIX standard for threads**.  
+- The relationship between **Pthread** and **POSIX** is similar to that between **MPICH** and **MPI**.
+
+---
+
+### Pthread Creation
+#### Function Prototype
+```c
+pthread_create(thread, attr, routine, arg)
+```
+
+#### Parameters
+- thread — A unique identifier (token) for the new thread.
+- attr — Thread attributes. Use `NULL` for default values.
+- routine — The function (routine) that the thread will execute once created.
+- arg — A single argument passed to the routine.
+  
+#### Notes 
+- The created thread can read and modify values from the main thread.
+- It can also return a value to the main thread.
+- The argument (`arg`) can be a data structure, typically passed as a pointer.
+- Be sure to cast data types appropriately when passing or receiving arguments.
+
+#### Example 
+
+```c
+// pthread_example.c
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NUM_THREADS 5
+
+// Thread routine: prints a greeting message with its thread ID
+void *PrintHello(void *threadArg) {
+    long tid = *(long *)threadArg;    // Extract thread ID
+    printf("Hello World! It's me, thread #%ld\n", tid);
+    return NULL;                      // Can return a pointer if needed (simplified as NULL here)
+}
+
+int main(void) {
+    pthread_t threads[NUM_THREADS];
+    long thread_ids[NUM_THREADS];
+    int rc;
+
+    // Create threads
+    for (long t = 0; t < NUM_THREADS; ++t) {
+        thread_ids[t] = t; // Each thread gets its own ID slot to avoid race conditions
+        rc = pthread_create(&threads[t], NULL, PrintHello, (void *)&thread_ids[t]);
+        if (rc != 0) {
+            fprintf(stderr, "Error: pthread_create failed with code %d\n", rc);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for all threads to finish
+    for (int t = 0; t < NUM_THREADS; ++t) {
+        rc = pthread_join(threads[t], NULL);
+        if (rc != 0) {
+            fprintf(stderr, "Error: pthread_join failed with code %d\n", rc);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("All threads finished. Exiting main.\n");
+    return 0;
+}
+```
+
+### Pthread Joining & Detaching
+
+#### `pthread_join(threadId, status)`
+- **Purpose:**  
+  The calling thread waits until the specified thread (`threadId`) terminates, optionally retrieving its return status.
+- **Key points:**
+  - It **blocks** the caller until the target thread finishes.
+  - Used for **synchronization** between threads.
+  - Common in scenarios where threads perform sub-tasks and their results need to be merged afterward.
+
+  ```c
+  pthread_join(thread, NULL);
+  ```
+- Example:
+Several worker threads process data in parallel, and the main thread waits for all of them to finish before aggregating results.
+
+#### `pthread_detach(threadId)`
+- Purpose:
+Marks a thread as detached, meaning its resources are automatically released when it terminates.
+
+- Key points:
+  - Once detached, a thread cannot be joined later.
+  - Helps free system resources automatically when the thread finishes.
+  - Common in server-like applications where threads handle independent tasks (e.g., each thread serves a client request).
+  ```c
+  pthread_detach(thread);
+  ```
+- Example:
+A web server creates a new thread for each incoming request. Since each request is independent, threads are detached so they clean up automatically after completing their work.
 
