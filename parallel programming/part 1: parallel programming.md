@@ -825,3 +825,221 @@ Marks a thread as detached, meaning its resources are automatically released whe
 - Example:
 A web server creates a new thread for each incoming request. Since each request is independent, threads are detached so they clean up automatically after completing their work.
 
+---
+
+### Synchronization Problem & Tools
+
+The **outcome of shared data** should **not depend on the execution order** among processes or threads.  
+Instructions of individual threads may be interleaved, leading to **race conditions** if synchronization is not properly handled.
+
+---
+
+#### Pthread Lock / Mutex Routines
+
+- A mutex must be declared as type **`pthread_mutex_t`**, initialized with **`pthread_mutex_init()`**, and destroyed with **`pthread_mutex_destroy()`** when no longer needed.  
+- A **critical section** — the code segment accessing shared memory or shared resources — can be protected using **`pthread_mutex_lock()`** and **`pthread_mutex_unlock()`** to ensure only one thread executes that section at a time.  
+- Whenever shared memory or shared variables exist, those sections should be clearly identified and protected as **critical sections**.
+
+---
+
+#### Synchronization
+
+For a detailed explanation of process synchronization concepts and common mechanisms (such as semaphores, monitors, and condition variables), refer to:
+
+🔗 [Process Synchronization – CS Notes](https://github.com/9-8-7-6/cs-notes/blob/main/operating-systems/06-process%20synchronization.md#process-synchronization)
+
+---
+
+#### Condition Variables (CV) in Pthread
+
+- In Pthread, a **Condition Variable (CV)** is of type `pthread_cond_t`.
+- Common routines:
+  - `pthread_cond_init()` — initialize a condition variable.
+  - `pthread_cond_wait(&theCV, &somelock)` — release the lock and wait for a signal.
+  - `pthread_cond_signal(&theCV)` — wake up one waiting thread.
+  - `pthread_cond_broadcast(&theCV)` — wake up all waiting threads.
+
+- Example
+```c 
+void action() {
+    pthread_mutex_lock(&mutex);
+    // --- Critical section start ---
+    if (x != 0) {
+        pthread_cond_wait(&cond, &mutex);
+    }
+    // --- Critical section end ---
+    pthread_mutex_unlock(&mutex);
+
+    take_action();
+}
+```
+
+```c
+void counter() {
+    pthread_mutex_lock(&mutex);
+    x--;
+    if (x == 0) {
+        pthread_cond_signal(&cond);
+    }
+    pthread_mutex_unlock(&mutex);
+}
+```
+
+##### Explanation
+
+- The event counter **x** is a shared variable among threads.
+
+If no lock is used in **action()**:
+- A thread may call **pthread_cond_wait()** after another thread has already set **x = 0**, causing it to miss the signal and block indefinitely.
+
+If no lock is used in **counter()**:
+
+There is no guarantee that the decrement and test of **x** occur atomically, leading to race conditions.
+
+By requiring condition variable operations to be performed while holding a mutex lock, Pthread prevents many common synchronization bugs and ensures safe access to shared state.
+
+---
+
+#### Thread Pools
+- Create a number of threads in a pool where they await work.
+
+```c
+// thread_pool_example.c
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define MAX_THREADS 4
+#define MAX_QUEUE   10
+
+typedef struct {
+    void (*function)(void *arg);
+    void *arg;
+} task_t;
+
+typedef struct {
+    pthread_mutex_t lock;
+    pthread_cond_t notify;
+    pthread_t threads[MAX_THREADS];
+    task_t queue[MAX_QUEUE];
+
+    int queue_size;
+    int head;
+    int tail;
+    int count;
+    int shutdown;
+} thread_pool_t;
+
+// Worker thread routine
+void *thread_do_work(void *pool_arg) {
+    thread_pool_t *pool = (thread_pool_t *)pool_arg;
+
+    while (1) {
+        pthread_mutex_lock(&pool->lock);
+
+        // Wait for available tasks or shutdown
+        while (pool->count == 0 && !pool->shutdown) {
+            pthread_cond_wait(&pool->notify, &pool->lock);
+        }
+
+        if (pool->shutdown) {
+            pthread_mutex_unlock(&pool->lock);
+            pthread_exit(NULL);
+        }
+
+        // Fetch task from queue
+        task_t task = pool->queue[pool->head];
+        pool->head = (pool->head + 1) % pool->queue_size;
+        pool->count--;
+
+        pthread_mutex_unlock(&pool->lock);
+
+        // Execute task
+        (*(task.function))(task.arg);
+    }
+
+    pthread_exit(NULL);
+}
+
+// Create thread pool
+thread_pool_t *thread_pool_create(int num_threads, int queue_size) {
+    thread_pool_t *pool = (thread_pool_t *)malloc(sizeof(thread_pool_t));
+    if (!pool) return NULL;
+
+    pool->queue_size = queue_size;
+    pool->head = pool->tail = pool->count = 0;
+    pool->shutdown = 0;
+
+    pthread_mutex_init(&pool->lock, NULL);
+    pthread_cond_init(&pool->notify, NULL);
+
+    for (int i = 0; i < num_threads; ++i) {
+        pthread_create(&pool->threads[i], NULL, thread_do_work, (void *)pool);
+    }
+
+    return pool;
+}
+
+// Add task to pool
+int thread_pool_add(thread_pool_t *pool, void (*function)(void *), void *arg) {
+    pthread_mutex_lock(&pool->lock);
+
+    if (pool->count == pool->queue_size) {
+        pthread_mutex_unlock(&pool->lock);
+        return -1; // queue full
+    }
+
+    // Add task
+    pool->queue[pool->tail].function = function;
+    pool->queue[pool->tail].arg = arg;
+    pool->tail = (pool->tail + 1) % pool->queue_size;
+    pool->count++;
+
+    pthread_cond_signal(&pool->notify);
+    pthread_mutex_unlock(&pool->lock);
+
+    return 0;
+}
+
+// Destroy thread pool
+void thread_pool_destroy(thread_pool_t *pool) {
+    pthread_mutex_lock(&pool->lock);
+    pool->shutdown = 1;
+    pthread_cond_broadcast(&pool->notify);
+    pthread_mutex_unlock(&pool->lock);
+
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        pthread_join(pool->threads[i], NULL);
+    }
+
+    pthread_mutex_destroy(&pool->lock);
+    pthread_cond_destroy(&pool->notify);
+    free(pool);
+}
+
+// Example task
+void example_task(void *arg) {
+    int id = *(int *)arg;
+    printf("Thread %lu is processing task %d\n", pthread_self(), id);
+    sleep(1);
+}
+
+int main() {
+    thread_pool_t *pool = thread_pool_create(MAX_THREADS, MAX_QUEUE);
+
+    int tasks[20];
+    for (int i = 0; i < 20; ++i) {
+        tasks[i] = i;
+        if (thread_pool_add(pool, example_task, &tasks[i]) != 0) {
+            printf("Task queue full, skipping task %d\n", i);
+        }
+    }
+
+    sleep(5); // Allow time for threads to process tasks
+    thread_pool_destroy(pool);
+
+    printf("All threads have completed. Exiting main.\n");
+    return 0;
+}
+```
