@@ -1114,3 +1114,133 @@ public void run() {
   }
 }
 ```
+
+## OpenMP
+
+**OpenMP (Open Multi-Processing)** is an API that supports **multi-threaded, shared-memory parallelism** in C, C++, and Fortran.
+
+---
+
+### Overview
+
+- **API Type:** Multi-threaded, shared memory parallelism  
+- **Portability:** Works across C/C++ and Fortran compilers  
+- **Model:** Follows the *Fork-Join* model  
+  - The master thread forks a number of slave threads.
+  - Tasks are divided among these threads.
+  - Threads rejoin the master after completing their work.  
+- **Compiler Directive-Based:**  
+  The compiler interprets OpenMP directives to automatically create, manage, and synchronize threads.
+
+### Example
+
+```c
+#include <omp.h>
+
+int A[10], B[10], C[10];
+
+// Beginning of parallel section: Fork a team of threads
+#pragma omp parallel for num_threads(10)
+for (int i = 0; i < 10; i++) {
+    A[i] = B[i] + C[i];
+}
+// Threads join back to the master after completion
+```
+
+### OpenMP Directives
+
+- **C/C++ Format**
+  - ```c
+    #pragma omp    // Required
+    ```
+  - `directive-name`: Valid OpenMP directives include `parallel`, `do`, `for`, etc.  
+  - `[clause, ...]`: Optional. Clauses can appear in any order and be repeated as needed.  
+  - `newline`: Required to end the directive.  
+
+- **Example**
+  ```c
+  #pragma omp parallel default(shared) private(beta, pi)
+  ```
+
+- Rules
+  - Case sensitive.
+  - Only one `directive-name` may be specified per directive.
+  - Each directive applies to at most one succeeding statement, which must be a structured block.
+
+#### Parallel Region
+A parallel region is a block of code executed by multiple threads.
+
+```c
+#pragma omp parallel [clause...]
+    if (scalar_expression)
+    num_threads(integer_expression)
+structured_block
+```
+
+#### Overview
+- When the `parallel` directive is reached, a team of threads is created.
+- The parallel region code is duplicated and executed by all threads.
+- There is an implied barrier at the end of every parallel section (all threads must finish before continuing).
+- If one thread crashes, **all threads in the team terminate**.
+
+#### Limitations
+- A **parallel region** must be a structured block that does not span multiple routines or source files.
+- It is illegal to branch (`goto`) into or out of a parallel region.
+- However, it is valid to call other functions within a parallel region.
+
+### Parallel Region — Determining the Number of Threads
+
+The number of threads in a parallel region is determined in the following order of precedence:
+
+1. **Evaluation of the `if` clause**
+   - If the expression evaluates to `FALSE`, the region is executed **serially** by the master thread.  
+   - Example:  
+     ```c
+     #pragma omp parallel if(para == true)
+     ```
+
+2. **Setting of the `num_threads` clause**
+   - Explicitly specifies the number of threads.  
+   - Example:  
+     ```c
+     #pragma omp parallel num_threads(10)
+     ```
+3. **Calling the `omp_set_num_threads()` function**
+   - Sets the number of threads **before** entering the parallel region.
+
+4. **Setting the `OMP_NUM_THREADS` environment variable**
+   - Also must be configured **before** the parallel region executes.
+
+5. **Default behavior**
+   - If none of the above are specified, the number of threads usually equals the **number of CPUs or cores** available on the node.
+
+---
+
+### Nested Parallel Regions
+
+Example:
+```c
+// A total of 6 "hello world" messages will be printed
+#pragma omp parallel num_threads(2)
+{
+  #pragma omp parallel num_threads(3)
+  {
+    printf("hello world!\n");
+  }
+}
+```
+
+- Check if nested parallelism is enabled:
+```c
+omp_get_nested();
+```
+- Enable or disable nested parallelism:
+```c
+omp_set_nested(bool);
+```
+Or set the environment variable:
+```c
+OMP_NESTED=true
+```
+- If nested parallelism is not supported or disabled:
+  - Only one thread is created for the nested parallel region code (i.e., the nested region executes serially).
