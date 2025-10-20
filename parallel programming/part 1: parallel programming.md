@@ -1043,3 +1043,74 @@ int main() {
     return 0;
 }
 ```
+
+#### Pthread Semaphore
+Semaphore is part of the POSIX standard, but it is **not** part of the Pthread library.  
+
+##### POSIX Semaphore Routines
+- `sem_init(sem_t *sem, int pshared, unsigned int value)`
+- `sem_wait(sem_t *sem)`
+- `sem_post(sem_t *sem)`
+- `sem_getvalue(sem_t *sem, int *valptr)`
+- `sem_destroy(sem_t *sem)`
+
+##### Example
+```c
+#include <semaphore.h>
+sem_t sem;
+
+sem_init(&sem, 0, 1);  // Initialize semaphore with value 1
+sem_wait(&sem);        // Enter critical section
+  // critical section
+sem_post(&sem);        // Exit critical section
+sem_destroy(&sem);     // Clean up
+```
+
+##### Semaphore Drawbacks
+- Its correctness depends on the programmer.
+- All processes accessing shared data must execute `wait()` and `signal()` in the correct order and location.
+- Programming errors or uncooperative behavior can break correctness easily.
+
+#### Monitor
+- A monitor is a high-level synchronization construct that simplifies shared data access.
+- Instead of explicitly using wait() and signal(), the programmer defines a class with methods that manage shared data safely.
+- The monitor guarantees that only one thread can access the shared data at a time, equivalent to a critical section.
+- This approach provides high-level synchronization and reduces programmer error.
+
+Synchronized Tools in Java
+Synchronized Methods (Monitor)
+- A synchronized method uses the method receiver (the object itself) as a lock.
+- Two synchronized methods on the same object cannot interleave.
+- When a thread executes a synchronized method, other threads calling any synchronized method on the same object are blocked.
+
+```c
+public class SynchronizedCounter {
+  private int c = 0;
+
+  public synchronized void increment() {
+    c++;
+  }
+
+  public synchronized void decrement() {
+    c--;
+  }
+
+  public synchronized int value() {
+    return c;
+  }
+}
+```
+
+Synchronized Statements (Mutex Lock)
+- A synchronized block uses a specific expression (object) as a lock.
+- The block executes only when the thread has obtained the lock for that object.
+- This approach improves concurrency through finer-grained locking.
+
+``` c
+public void run() {
+  synchronized(p1) {
+    int i = 10; // statement without locking requirement
+    p1.display(s1);
+  }
+}
+```
