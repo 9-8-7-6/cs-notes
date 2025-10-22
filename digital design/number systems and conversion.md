@@ -6,7 +6,8 @@ An **analog signal** is **continuous**, meaning it has a value at every possible
  
 A **digital signal**, on the other hand, is **discrete** — it represents information using separate values, typically in binary form (0s and 1s).
 
-Although the real world is analog, **digital systems are more reliable** and easier to process.  
+Although the real world is analog, **digital systems are more reliable** and easier to process.
+
 Therefore, many modern systems **convert from analog to digital** for computation and control.
 
 ### Analog Characteristics
@@ -22,17 +23,22 @@ Therefore, many modern systems **convert from analog to digital** for computatio
 - Easy to store, process, and transmit  
 
 Analog systems try to achieve **error-free precision**, but even small noise can lead to large errors.  
+
 Digital systems, in contrast, **define a fixed maximum error** (called *quantization error*).  
 The **more bits** used in the digital representation, the **higher the accuracy**.
 
 ### Signal Conversion
 - **A/D Converter (Analog-to-Digital Converter):** Converts continuous analog signals into digital data.  
-- **DSP (Digital Signal Processing):** Processes digital signals to extract, modify, or enhance information.  
+
+- **DSP (Digital Signal Processing):** Processes digital signals to extract, modify, or enhance information. 
+ 
 - **D/A Converter (Digital-to-Analog Converter):** Converts digital data back into an analog signal.  
 
 ### Example: Voice Transmission
 In a **phone call**, the analog voice signal is **sampled** — divided into discrete time intervals.  
+
 Sampling allows the analog waveform to be represented digitally.  
+
 If the sampling rate is high enough (dense sampling), the reconstructed signal closely matches the original analog voice.
 
 ---
