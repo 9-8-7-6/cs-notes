@@ -2,7 +2,8 @@
 
 ## Analog and Digital
 
-An **analog signal** is **continuous**, meaning it has a value at every possible point in time, even when the change in time (ΔT) is very small.  
+An **analog signal** is **continuous**, meaning it has a value at every possible point in time, even when the change in time (ΔT) is very small. 
+ 
 A **digital signal**, on the other hand, is **discrete** — it represents information using separate values, typically in binary form (0s and 1s).
 
 Although the real world is analog, **digital systems are more reliable** and easier to process.  
