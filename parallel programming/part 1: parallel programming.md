@@ -1244,3 +1244,89 @@ OMP_NESTED=true
 ```
 - If nested parallelism is not supported or disabled:
   - Only one thread is created for the nested parallel region code (i.e., the nested region executes serially).
+
+---
+
+### Work-Sharing Construct
+
+A **work-sharing construct** divides the execution of a specific code region among the threads that encounter it.  
+It enables **parallel execution** of different parts of a program **without creating new threads**.
+
+- Work-sharing constructs **do not launch new threads**; they use the existing threads.  
+- There is **no implied barrier upon entry**, but there **is an implied barrier at the end** of each construct unless the `nowait` clause is used.
+
+---
+
+### Types of Work-Sharing Constructs
+
+#### 1. `for` / `do`
+
+- Distributes loop iterations among threads.  
+- Represents **data parallelism**, where each thread processes a different portion of an array or dataset.  
+- Ideal when **loop iterations are independent** (no data dependency).
+
+**Directive-specific clauses:**
+- `nowait` — Do not synchronize threads at the end of the loop.  
+- `schedule` — Describes how iterations are divided among threads.  
+  - **static**  
+    - Iterations are divided into fixed-size chunks.  
+    - If chunk size is not specified, iterations are evenly divided among threads.  
+  - **dynamic**  
+    - Each thread dynamically grabs a new chunk after finishing one.  
+  - **guided**  
+    - Similar to dynamic, but chunk size decreases over time (for better load balancing).  
+  - **runtime**  
+    - The scheduling policy is determined at runtime via the environment variable `OMP_SCHEDULE`.  
+  - **auto**  
+    - The compiler decides the schedule type (not generally recommended).  
+- `ordered` — Ensures that iterations are executed in the same order as in a serial version.  
+- `collapse` — Specifies how many nested loops to combine into one iteration space.
+
+**Example:**
+```c
+#pragma omp parallel for [clause... nowait/schedule/ordered/collapse ]
+for (int i = 0; i < 100; i++) {
+    A[i] = B[i] + C[i];
+}
+```
+
+
+#### 2. `sections`
+- Divides code into independent sections, each executed by a separate thread.
+- Useful when tasks are distinct and can be performed concurrently.
+**Example:**
+```c
+#pragma omp parallel sections
+{
+    #pragma omp section
+    { compute_A(); }
+
+    #pragma omp section
+    { compute_B(); }
+
+    #pragma omp section
+    { compute_C(); }
+}
+```
+
+#### 3. single
+- Ensures that only one thread executes a block of code, while others skip it.
+- Commonly used for I/O operations or initializing shared resources without locks.
+
+**Example:**
+```c
+#pragma omp parallel
+{
+    #pragma omp single
+    {
+        printf("Initialization by one thread.\n");
+    }
+}
+```
+
+#### Summary:
+- for → Divide loop iterations (data parallelism)
+- sections → Divide tasks (task parallelism)
+- single → Execute code by one thread only
+
+---
