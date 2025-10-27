@@ -5,41 +5,31 @@
 
 ---
 
-### Database / PostgreSQL
-- Notes taken while studying the [PostgreSQL Official Documentation](https://www.postgresql.org/docs/).
+- [Operating System](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/operating%20systems)
 
-### Operating System
-- Notes from the [Operating System open course](https://youtube.com/playlist?list=PLS0SUwlYe8cxj8FCPRoPHAehIiN9Vo6VZ&si=nDMe61Th6inCspb3)  by Prof. 周志遠 (National Tsing Hua University).
+- [Parallel Programming](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/parallel%20programming)
 
-### Parallel Programming
-- Notes from the [Operating System open course](https://www.youtube.com/playlist?list=PLS0SUwlYe8cxqw70UHOE5n4Lm-mXFXbZT)  by Prof. 周志遠 (National Tsing Hua University).
+- [System Design](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/system%20design)
+  - [Scalable Software Architectures](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design/scalable%20software%20architectures)
 
-### Computer Artecture
-- Note from the [Computer Artecture](https://www.youtube.com/playlist?list=PLS0SUwlYe8czszh6M74JCU0mIUL_ymBbe) by prof. 黃婷婷 (National Tsing Hua University).
 
-### Development-Notes
-- Testing
-    - Unit test
-    - Integration test(TODO)
-    - System test(TODO)
-- CICD(TODO)
+- [Digital Design](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/digital%20design)
 
-### Cyber security
-- Scan
-    - Vulnerability scanning(TODO)
-    - Network Scanning(TODO)
+- [Computer Architecture](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/computer%20architecture)
 
-### Network
-- WebRTC
+- [Development Notes](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/development%20notes)
 
-### System Design
-- Notes from [CS-310 Scalable Software Architectures](https://youtube.com/playlist?list=PLWl7jvxH18r0u5VRZsOjhghNXc_Ec4dZz&si=Ar1eeYR_Q1LBshGh)  by Prof. Stephen P. Tarzia(Northwestern University).
+- [Network](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network)
+  - [WebRTC](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network/WebRTC)
 
-### Data Structure and Algorithm
-- Algorithm's Notes from [MIT 6.006 Introduction to Algorithms, Spring 2020](https://www.youtube.com/playlist?list=PLUl4u3cNGP63EdVPNLG3ToM6LaEUuStEY)
+- [Algorithm Notes](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/data%20structure%20and%20algorithm)
+
+- [Database](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database)
+  - [PostgreSQL](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database/PostgreSQL)
 
 ---
 
 ## Disclaimer
-All notes are for **personal learning and educational purposes**.  
-If you are the content owner and have concerns, please contact me—I will fully cooperate in removing the material.
+All notes are intended **solely for personal learning and educational use**.  
+If you are a content owner and have any concerns, please contact me —  
+I will promptly remove or adjust any related material.

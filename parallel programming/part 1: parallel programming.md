@@ -420,7 +420,7 @@ Achieving the ideal \( S(p) = p \) is challenging because:
 
 #### MPI Calls
 - **Format:**  
-  `rc = MPI_XXX(parameter, ...)`
+  `rc (return code) = MPI_XXX(parameter, ...)`
 - **Initialization and Termination:**  
   Must call `MPI_Init()` before any MPI function and `MPI_Finalize()` at the end.
 - **Error Handling:**  
@@ -725,3 +725,608 @@ Produces a new group by including a subset of members from an existing group.
   - Unix processes
   - Threads(Pthread, Java)
 
+### Pthread
+- **Pthread** is the implementation of the **POSIX standard for threads**.  
+- The relationship between **Pthread** and **POSIX** is similar to that between **MPICH** and **MPI**.
+
+---
+
+### Pthread Creation
+#### Function Prototype
+```c
+pthread_create(thread, attr, routine, arg)
+```
+
+#### Parameters
+- thread — A unique identifier (token) for the new thread.
+- attr — Thread attributes. Use `NULL` for default values.
+- routine — The function (routine) that the thread will execute once created.
+- arg — A single argument passed to the routine.
+  
+#### Notes 
+- The created thread can read and modify values from the main thread.
+- It can also return a value to the main thread.
+- The argument (`arg`) can be a data structure, typically passed as a pointer.
+- Be sure to cast data types appropriately when passing or receiving arguments.
+
+#### Example 
+
+```c
+// pthread_example.c
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define NUM_THREADS 5
+
+// Thread routine: prints a greeting message with its thread ID
+void *PrintHello(void *threadArg) {
+    long tid = *(long *)threadArg;    // Extract thread ID
+    printf("Hello World! It's me, thread #%ld\n", tid);
+    return NULL;                      // Can return a pointer if needed (simplified as NULL here)
+}
+
+int main(void) {
+    pthread_t threads[NUM_THREADS];
+    long thread_ids[NUM_THREADS];
+    int rc;
+
+    // Create threads
+    for (long t = 0; t < NUM_THREADS; ++t) {
+        thread_ids[t] = t; // Each thread gets its own ID slot to avoid race conditions
+        rc = pthread_create(&threads[t], NULL, PrintHello, (void *)&thread_ids[t]);
+        if (rc != 0) {
+            fprintf(stderr, "Error: pthread_create failed with code %d\n", rc);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Wait for all threads to finish
+    for (int t = 0; t < NUM_THREADS; ++t) {
+        rc = pthread_join(threads[t], NULL);
+        if (rc != 0) {
+            fprintf(stderr, "Error: pthread_join failed with code %d\n", rc);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("All threads finished. Exiting main.\n");
+    return 0;
+}
+```
+
+### Pthread Joining & Detaching
+
+#### `pthread_join(threadId, status)`
+- **Purpose:**  
+  The calling thread waits until the specified thread (`threadId`) terminates, optionally retrieving its return status.
+- **Key points:**
+  - It **blocks** the caller until the target thread finishes.
+  - Used for **synchronization** between threads.
+  - Common in scenarios where threads perform sub-tasks and their results need to be merged afterward.
+
+  ```c
+  pthread_join(thread, NULL);
+  ```
+- Example:
+Several worker threads process data in parallel, and the main thread waits for all of them to finish before aggregating results.
+
+#### `pthread_detach(threadId)`
+- Purpose:
+Marks a thread as detached, meaning its resources are automatically released when it terminates.
+
+- Key points:
+  - Once detached, a thread cannot be joined later.
+  - Helps free system resources automatically when the thread finishes.
+  - Common in server-like applications where threads handle independent tasks (e.g., each thread serves a client request).
+  ```c
+  pthread_detach(thread);
+  ```
+- Example:
+A web server creates a new thread for each incoming request. Since each request is independent, threads are detached so they clean up automatically after completing their work.
+
+---
+
+### Synchronization Problem & Tools
+
+The **outcome of shared data** should **not depend on the execution order** among processes or threads.  
+Instructions of individual threads may be interleaved, leading to **race conditions** if synchronization is not properly handled.
+
+---
+
+#### Pthread Lock / Mutex Routines
+
+- A mutex must be declared as type **`pthread_mutex_t`**, initialized with **`pthread_mutex_init()`**, and destroyed with **`pthread_mutex_destroy()`** when no longer needed.  
+- A **critical section** — the code segment accessing shared memory or shared resources — can be protected using **`pthread_mutex_lock()`** and **`pthread_mutex_unlock()`** to ensure only one thread executes that section at a time.  
+- Whenever shared memory or shared variables exist, those sections should be clearly identified and protected as **critical sections**.
+
+---
+
+#### Synchronization
+
+For a detailed explanation of process synchronization concepts and common mechanisms (such as semaphores, monitors, and condition variables), refer to:
+
+🔗 [Process Synchronization – CS Notes](https://github.com/9-8-7-6/cs-notes/blob/main/operating-systems/06-process%20synchronization.md#process-synchronization)
+
+---
+
+#### Condition Variables (CV) in Pthread
+
+- In Pthread, a **Condition Variable (CV)** is of type `pthread_cond_t`.
+- Common routines:
+  - `pthread_cond_init()` — initialize a condition variable.
+  - `pthread_cond_wait(&theCV, &somelock)` — release the lock and wait for a signal.
+  - `pthread_cond_signal(&theCV)` — wake up one waiting thread.
+  - `pthread_cond_broadcast(&theCV)` — wake up all waiting threads.
+
+- Example
+```c 
+void action() {
+    pthread_mutex_lock(&mutex);
+    // --- Critical section start ---
+    if (x != 0) {
+        pthread_cond_wait(&cond, &mutex);
+    }
+    // --- Critical section end ---
+    pthread_mutex_unlock(&mutex);
+
+    take_action();
+}
+```
+
+```c
+void counter() {
+    pthread_mutex_lock(&mutex);
+    x--;
+    if (x == 0) {
+        pthread_cond_signal(&cond);
+    }
+    pthread_mutex_unlock(&mutex);
+}
+```
+
+##### Explanation
+
+- The event counter **x** is a shared variable among threads.
+
+If no lock is used in **action()**:
+- A thread may call **pthread_cond_wait()** after another thread has already set **x = 0**, causing it to miss the signal and block indefinitely.
+
+If no lock is used in **counter()**:
+
+There is no guarantee that the decrement and test of **x** occur atomically, leading to race conditions.
+
+By requiring condition variable operations to be performed while holding a mutex lock, Pthread prevents many common synchronization bugs and ensures safe access to shared state.
+
+---
+
+#### Thread Pools
+- Create a number of threads in a pool where they await work.
+
+```c
+// thread_pool_example.c
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define MAX_THREADS 4
+#define MAX_QUEUE   10
+
+typedef struct {
+    void (*function)(void *arg);
+    void *arg;
+} task_t;
+
+typedef struct {
+    pthread_mutex_t lock;
+    pthread_cond_t notify;
+    pthread_t threads[MAX_THREADS];
+    task_t queue[MAX_QUEUE];
+
+    int queue_size;
+    int head;
+    int tail;
+    int count;
+    int shutdown;
+} thread_pool_t;
+
+// Worker thread routine
+void *thread_do_work(void *pool_arg) {
+    thread_pool_t *pool = (thread_pool_t *)pool_arg;
+
+    while (1) {
+        pthread_mutex_lock(&pool->lock);
+
+        // Wait for available tasks or shutdown
+        while (pool->count == 0 && !pool->shutdown) {
+            pthread_cond_wait(&pool->notify, &pool->lock);
+        }
+
+        if (pool->shutdown) {
+            pthread_mutex_unlock(&pool->lock);
+            pthread_exit(NULL);
+        }
+
+        // Fetch task from queue
+        task_t task = pool->queue[pool->head];
+        pool->head = (pool->head + 1) % pool->queue_size;
+        pool->count--;
+
+        pthread_mutex_unlock(&pool->lock);
+
+        // Execute task
+        (*(task.function))(task.arg);
+    }
+
+    pthread_exit(NULL);
+}
+
+// Create thread pool
+thread_pool_t *thread_pool_create(int num_threads, int queue_size) {
+    thread_pool_t *pool = (thread_pool_t *)malloc(sizeof(thread_pool_t));
+    if (!pool) return NULL;
+
+    pool->queue_size = queue_size;
+    pool->head = pool->tail = pool->count = 0;
+    pool->shutdown = 0;
+
+    pthread_mutex_init(&pool->lock, NULL);
+    pthread_cond_init(&pool->notify, NULL);
+
+    for (int i = 0; i < num_threads; ++i) {
+        pthread_create(&pool->threads[i], NULL, thread_do_work, (void *)pool);
+    }
+
+    return pool;
+}
+
+// Add task to pool
+int thread_pool_add(thread_pool_t *pool, void (*function)(void *), void *arg) {
+    pthread_mutex_lock(&pool->lock);
+
+    if (pool->count == pool->queue_size) {
+        pthread_mutex_unlock(&pool->lock);
+        return -1; // queue full
+    }
+
+    // Add task
+    pool->queue[pool->tail].function = function;
+    pool->queue[pool->tail].arg = arg;
+    pool->tail = (pool->tail + 1) % pool->queue_size;
+    pool->count++;
+
+    pthread_cond_signal(&pool->notify);
+    pthread_mutex_unlock(&pool->lock);
+
+    return 0;
+}
+
+// Destroy thread pool
+void thread_pool_destroy(thread_pool_t *pool) {
+    pthread_mutex_lock(&pool->lock);
+    pool->shutdown = 1;
+    pthread_cond_broadcast(&pool->notify);
+    pthread_mutex_unlock(&pool->lock);
+
+    for (int i = 0; i < MAX_THREADS; ++i) {
+        pthread_join(pool->threads[i], NULL);
+    }
+
+    pthread_mutex_destroy(&pool->lock);
+    pthread_cond_destroy(&pool->notify);
+    free(pool);
+}
+
+// Example task
+void example_task(void *arg) {
+    int id = *(int *)arg;
+    printf("Thread %lu is processing task %d\n", pthread_self(), id);
+    sleep(1);
+}
+
+int main() {
+    thread_pool_t *pool = thread_pool_create(MAX_THREADS, MAX_QUEUE);
+
+    int tasks[20];
+    for (int i = 0; i < 20; ++i) {
+        tasks[i] = i;
+        if (thread_pool_add(pool, example_task, &tasks[i]) != 0) {
+            printf("Task queue full, skipping task %d\n", i);
+        }
+    }
+
+    sleep(5); // Allow time for threads to process tasks
+    thread_pool_destroy(pool);
+
+    printf("All threads have completed. Exiting main.\n");
+    return 0;
+}
+```
+
+#### Pthread Semaphore
+Semaphore is part of the POSIX standard, but it is **not** part of the Pthread library.  
+
+##### POSIX Semaphore Routines
+- `sem_init(sem_t *sem, int pshared, unsigned int value)`
+- `sem_wait(sem_t *sem)`
+- `sem_post(sem_t *sem)`
+- `sem_getvalue(sem_t *sem, int *valptr)`
+- `sem_destroy(sem_t *sem)`
+
+##### Example
+```c
+#include <semaphore.h>
+sem_t sem;
+
+sem_init(&sem, 0, 1);  // Initialize semaphore with value 1
+sem_wait(&sem);        // Enter critical section
+  // critical section
+sem_post(&sem);        // Exit critical section
+sem_destroy(&sem);     // Clean up
+```
+
+##### Semaphore Drawbacks
+- Its correctness depends on the programmer.
+- All processes accessing shared data must execute `wait()` and `signal()` in the correct order and location.
+- Programming errors or uncooperative behavior can break correctness easily.
+
+#### Monitor
+- A monitor is a high-level synchronization construct that simplifies shared data access.
+- Instead of explicitly using wait() and signal(), the programmer defines a class with methods that manage shared data safely.
+- The monitor guarantees that only one thread can access the shared data at a time, equivalent to a critical section.
+- This approach provides high-level synchronization and reduces programmer error.
+
+Synchronized Tools in Java
+Synchronized Methods (Monitor)
+- A synchronized method uses the method receiver (the object itself) as a lock.
+- Two synchronized methods on the same object cannot interleave.
+- When a thread executes a synchronized method, other threads calling any synchronized method on the same object are blocked.
+
+```c
+public class SynchronizedCounter {
+  private int c = 0;
+
+  public synchronized void increment() {
+    c++;
+  }
+
+  public synchronized void decrement() {
+    c--;
+  }
+
+  public synchronized int value() {
+    return c;
+  }
+}
+```
+
+Synchronized Statements (Mutex Lock)
+- A synchronized block uses a specific expression (object) as a lock.
+- The block executes only when the thread has obtained the lock for that object.
+- This approach improves concurrency through finer-grained locking.
+
+``` c
+public void run() {
+  synchronized(p1) {
+    int i = 10; // statement without locking requirement
+    p1.display(s1);
+  }
+}
+```
+
+## OpenMP
+
+**OpenMP (Open Multi-Processing)** is an API that supports **multi-threaded, shared-memory parallelism** in C, C++, and Fortran.
+
+---
+
+### Overview
+
+- **API Type:** Multi-threaded, shared memory parallelism  
+- **Portability:** Works across C/C++ and Fortran compilers  
+- **Model:** Follows the *Fork-Join* model  
+  - The master thread forks a number of slave threads.
+  - Tasks are divided among these threads.
+  - Threads rejoin the master after completing their work.  
+- **Compiler Directive-Based:**  
+  The compiler interprets OpenMP directives to automatically create, manage, and synchronize threads.
+
+### Example
+
+```c
+#include <omp.h>
+
+int A[10], B[10], C[10];
+
+// Beginning of parallel section: Fork a team of threads
+#pragma omp parallel for num_threads(10)
+for (int i = 0; i < 10; i++) {
+    A[i] = B[i] + C[i];
+}
+// Threads join back to the master after completion
+```
+
+### OpenMP Directives
+
+- **C/C++ Format**
+  - ```c
+    #pragma omp    // Required
+    ```
+  - `directive-name`: Valid OpenMP directives include `parallel`, `do`, `for`, etc.  
+  - `[clause, ...]`: Optional. Clauses can appear in any order and be repeated as needed.  
+  - `newline`: Required to end the directive.  
+
+- **Example**
+  ```c
+  #pragma omp parallel default(shared) private(beta, pi)
+  ```
+
+- Rules
+  - Case sensitive.
+  - Only one `directive-name` may be specified per directive.
+  - Each directive applies to at most one succeeding statement, which must be a structured block.
+
+#### Parallel Region
+A parallel region is a block of code executed by multiple threads.
+
+```c
+#pragma omp parallel [clause...]
+    if (scalar_expression)
+    num_threads(integer_expression)
+structured_block
+```
+
+#### Overview
+- When the `parallel` directive is reached, a team of threads is created.
+- The parallel region code is duplicated and executed by all threads.
+- There is an implied barrier at the end of every parallel section (all threads must finish before continuing).
+- If one thread crashes, **all threads in the team terminate**.
+
+#### Limitations
+- A **parallel region** must be a structured block that does not span multiple routines or source files.
+- It is illegal to branch (`goto`) into or out of a parallel region.
+- However, it is valid to call other functions within a parallel region.
+
+### Parallel Region — Determining the Number of Threads
+
+The number of threads in a parallel region is determined in the following order of precedence:
+
+1. **Evaluation of the `if` clause**
+   - If the expression evaluates to `FALSE`, the region is executed **serially** by the master thread.  
+   - Example:  
+     ```c
+     #pragma omp parallel if(para == true)
+     ```
+
+2. **Setting of the `num_threads` clause**
+   - Explicitly specifies the number of threads.  
+   - Example:  
+     ```c
+     #pragma omp parallel num_threads(10)
+     ```
+3. **Calling the `omp_set_num_threads()` function**
+   - Sets the number of threads **before** entering the parallel region.
+
+4. **Setting the `OMP_NUM_THREADS` environment variable**
+   - Also must be configured **before** the parallel region executes.
+
+5. **Default behavior**
+   - If none of the above are specified, the number of threads usually equals the **number of CPUs or cores** available on the node.
+
+---
+
+### Nested Parallel Regions
+
+Example:
+```c
+// A total of 6 "hello world" messages will be printed
+#pragma omp parallel num_threads(2)
+{
+  #pragma omp parallel num_threads(3)
+  {
+    printf("hello world!\n");
+  }
+}
+```
+
+- Check if nested parallelism is enabled:
+```c
+omp_get_nested();
+```
+- Enable or disable nested parallelism:
+```c
+omp_set_nested(bool);
+```
+Or set the environment variable:
+```c
+OMP_NESTED=true
+```
+- If nested parallelism is not supported or disabled:
+  - Only one thread is created for the nested parallel region code (i.e., the nested region executes serially).
+
+---
+
+### Work-Sharing Construct
+
+A **work-sharing construct** divides the execution of a specific code region among the threads that encounter it.  
+It enables **parallel execution** of different parts of a program **without creating new threads**.
+
+- Work-sharing constructs **do not launch new threads**; they use the existing threads.  
+- There is **no implied barrier upon entry**, but there **is an implied barrier at the end** of each construct unless the `nowait` clause is used.
+
+---
+
+### Types of Work-Sharing Constructs
+
+#### 1. `for` / `do`
+
+- Distributes loop iterations among threads.  
+- Represents **data parallelism**, where each thread processes a different portion of an array or dataset.  
+- Ideal when **loop iterations are independent** (no data dependency).
+
+**Directive-specific clauses:**
+- `nowait` — Do not synchronize threads at the end of the loop.  
+- `schedule` — Describes how iterations are divided among threads.  
+  - **static**  
+    - Iterations are divided into fixed-size chunks.  
+    - If chunk size is not specified, iterations are evenly divided among threads.  
+  - **dynamic**  
+    - Each thread dynamically grabs a new chunk after finishing one.  
+  - **guided**  
+    - Similar to dynamic, but chunk size decreases over time (for better load balancing).  
+  - **runtime**  
+    - The scheduling policy is determined at runtime via the environment variable `OMP_SCHEDULE`.  
+  - **auto**  
+    - The compiler decides the schedule type (not generally recommended).  
+- `ordered` — Ensures that iterations are executed in the same order as in a serial version.  
+- `collapse` — Specifies how many nested loops to combine into one iteration space.
+
+**Example:**
+```c
+#pragma omp parallel for [clause... nowait/schedule/ordered/collapse ]
+for (int i = 0; i < 100; i++) {
+    A[i] = B[i] + C[i];
+}
+```
+
+
+#### 2. `sections`
+- Divides code into independent sections, each executed by a separate thread.
+- Useful when tasks are distinct and can be performed concurrently.
+**Example:**
+```c
+#pragma omp parallel sections
+{
+    #pragma omp section
+    { compute_A(); }
+
+    #pragma omp section
+    { compute_B(); }
+
+    #pragma omp section
+    { compute_C(); }
+}
+```
+
+#### 3. single
+- Ensures that only one thread executes a block of code, while others skip it.
+- Commonly used for I/O operations or initializing shared resources without locks.
+
+**Example:**
+```c
+#pragma omp parallel
+{
+    #pragma omp single
+    {
+        printf("Initialization by one thread.\n");
+    }
+}
+```
+
+#### Summary:
+- for → Divide loop iterations (data parallelism)
+- sections → Divide tasks (task parallelism)
+- single → Execute code by one thread only
+
+---
