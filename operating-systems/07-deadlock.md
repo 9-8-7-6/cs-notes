@@ -107,52 +107,57 @@ A system is in a safe state if there exists a sequence of allocations that can s
 
 #### Edge Types
 1. **Request edge**: `Pi → Rj`  
- - Process `Pi` requests (is waiting for) resource `Rj`.  
+   - Process `Pi` requests (is waiting for) resource `Rj`.  
 2. **Assignment edge**: `Rj → Pi`  
- - Resource `Rj` is currently assigned to process `Pi`.  
+   - Resource `Rj` is currently assigned to process `Pi`.  
 3. **Claim edge**: `Pi → Rj` (dashed edge)  
- - Process `Pi` **may request** `Rj` in the future.  
- - A claim edge becomes a request edge when `Pi` requests the resource.  
- - An assignment edge reverts to a claim edge when the resource is released.  
+   - Process `Pi` **may request** `Rj` in the future.  
+   - A claim edge becomes a request edge when `Pi` requests the resource.  
+   - An assignment edge reverts to a claim edge when the resource is released.  
 
 > Run a **cycle-detection algorithm** whenever a claim edge becomes an assignment edge.  
 
 ---
 
 ### 2. Multiple Instances of Each Resource Type
-- **Banker’s Algorithm**  
-- Based on **safe sequence detection**.  
-- A request is granted **only if** the resulting allocation leaves the system in a safe state.  
-- Suitable for **multiple instances** of each resource type.  
 
-#### Safety Algorithm (Steps)
-1. Assume each process may need up to its *maximum declared resources*.  
-2. Find a process whose remaining need ≤ currently available resources.  
-3. Pretend that process finishes, release its allocated resources back to the pool.  
-4. Repeat step 2 until:  
- - All processes can finish → **Safe state**.  
- - No such process can be found → **Unsafe state**.  
+- Use **Banker’s Algorithm**  
+  - Based on **safe sequence detection**.  
+  - A request is granted **only if** the resulting allocation leaves the system in a **safe state**.  
+  - Suitable for **multiple instances** of each resource type.  
 
 ---
 
+#### Safety Algorithm (Steps)
+
+1. **Assume** each process may need up to its *maximum declared resources*.  
+2. **Find** a process whose remaining need ≤ currently available resources.  
+3. **Pretend** that process finishes, releasing its allocated resources back to the pool.  
+4. **Repeat** step 2 until one of the following occurs:  
+   - All processes can finish → **Safe state**  
+   - No such process can be found → **Unsafe state**
+
+---
+
+
 ## Deadlock Detection
 
-- **Single instance** of each resource type  
-- Convert request/assignment edges into a **wait-for graph**.  
-- Deadlock exists if the graph contains a cycle.  
+1. **Single instance** of each resource type  
+   - Convert request/assignment edges into a **wait-for graph**.  
+   - Deadlock exists if the graph contains a cycle.  
 
-- **Multiple instances** of each resource type  
-- Use safety algorithm to check if the system is in a safe state.  
+2. **Multiple instances** of each resource type  
+   - Use safety algorithm to check if the system is in a safe state.  
 
 ---
 
 ## Deadlock Recovery
 
 1. **Process termination**  
- - Abort all deadlocked processes.  
- - Abort one process at a time until the deadlock cycle is eliminated.  
+   - Abort all deadlocked processes.  
+   - Abort one process at a time until the deadlock cycle is eliminated.  
 
 2. **Resource preemption**  
- - Select a victim process and preempt its resources.  
- - Rollback the process (partially or entirely).  
- - Beware of starvation (avoid repeatedly preempting the same process).  
+   - Select a victim process and preempt its resources.  
+   - Rollback the process (partially or entirely).  
+   - Beware of starvation (avoid repeatedly preempting the same process).  
