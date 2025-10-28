@@ -100,7 +100,7 @@
 ---
 
 ### Demand Segmentation
-- Demand Segmentation: better for programmer’s perspetive
+- Demand Segmentation: a page is delivered into the memory on demand i.e., only when a reference is made to a location on that page, which is better for programmer’s perspetive
 
 ---
 
