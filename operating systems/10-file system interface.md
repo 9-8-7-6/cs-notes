@@ -80,12 +80,13 @@
 ## Partition, Volume, Directory
 
 ### Partition
-- Can be **formatted** (with a filesystem) or **raw**.  
-- A **raw partition** is a storage unit that has not yet been formatted with a filesystem.  
+- A partition is a logically defined contiguous region of a physical storage device.
+- It divides a disk into separate sections, each with its own starting and ending block.
+- A partition itself does not imply any specific data structure.
 
 ### Volume
-- A **logical storage unit** created from a partition.  
-- Once a partition is formatted with a filesystem, it becomes a **volume** that can be used by the operating system.  
+- A volume is a logical storage unit created from a formatted partition with a filesystem.
+- Once a filesystem is applied, the partition becomes a volume that the operating system can mount and use to store files.
 
 ### Directory
 - Stores information about the files located in the partition/volume.  
