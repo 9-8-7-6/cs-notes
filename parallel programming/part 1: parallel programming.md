@@ -236,6 +236,8 @@ Hardware components used to implement interconnection networks:
 
 ### Common Topologies
 
+![Network Topology](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShvr9FdmKNDoUqUF9v9rImarZwRG478Caaew&s)
+
 - **Linear Array**  
   - Simplest and cheapest design.  
   - Nodes connected in a straight line.  
@@ -268,10 +270,6 @@ Hardware components used to implement interconnection networks:
   - High connectivity and fault tolerance.  
   - Complex wiring and expensive implementation for large systems.  
   - Common in parallel computers and message-passing multiprocessors (e.g., network switches or interconnect fabrics).
-
----
-
-![Network Topology](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcShvr9FdmKNDoUqUF9v9rImarZwRG478Caaew&s)
 
 ---
 
@@ -846,13 +844,14 @@ Instructions of individual threads may be interleaved, leading to **race conditi
 
 For a detailed explanation of process synchronization concepts and common mechanisms (such as semaphores, monitors, and condition variables), refer to:
 
-🔗 [Process Synchronization – CS Notes](https://github.com/9-8-7-6/cs-notes/blob/main/operating-systems/06-process%20synchronization.md#process-synchronization)
+🔗 [Process Synchronization – CS Notes](https://github.com/9-8-7-6/cs-notes/blob/5c91b5169f01649dfaf308441a865811f4f75e0d/operating%20systems/06-process%20synchronization.md)
 
 ---
 
 #### Condition Variables (CV) in Pthread
 
-- In Pthread, a **Condition Variable (CV)** is of type `pthread_cond_t`.
+- In Pthread, **Condition Variable (CV)'s** type is `pthread_cond_t`.
+- Condition variable (CV) in pthreads is a synchronization mechanism that allows threads to wait (sleep) until a specific condition becomes true, and be awakened by another thread.
 - Common routines:
   - `pthread_cond_init()` — initialize a condition variable.
   - `pthread_cond_wait(&theCV, &somelock)` — release the lock and wait for a signal.
