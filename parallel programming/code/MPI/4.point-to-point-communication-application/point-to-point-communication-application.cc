@@ -56,9 +56,12 @@ void walk(Walker* walker, int subdomain_start, int subdomain_size, int domain_si
 }
 
 void send_outgoing_walkers(vector<Walker>* outgoing_walkers, int world_rank, int world_size) {
-    if (outgoing_walkers->empty()) return;
-    void* buf = (void*)outgoing_walkers->data();
-    int bytes = (int)(outgoing_walkers->size() * sizeof(Walker));
+    void* buf = nullptr;
+    int bytes = 0;
+    if (!outgoing_walkers->empty()) {
+        buf = (void*)outgoing_walkers->data();
+        bytes = (int)(outgoing_walkers->size() * sizeof(Walker));
+    }
     int dest = (world_rank + 1) % world_size;
     MPI_Send(buf, bytes, MPI_BYTE, dest, 0, MPI_COMM_WORLD);
     outgoing_walkers->clear();
