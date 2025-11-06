@@ -30,14 +30,21 @@ int main(int argc, char** argv) {
         MPI_Send(numbers, number_amount, MPI_INT, 1, 0, MPI_COMM_WORLD);
         printf("0 sent %d numbers to 1\n", number_amount);
     } else if(world_rank == 1) {
+        // Normal One
+        // MPI_Status status;
+        // MPI_Recv(numbers, MAX_NUMBERS, MPI_INT, 0,0, MPI_COMM_WORLD, &status);
+        // MPI_Get_count(&status, MPI_INT, &number_amount);
+        // printf("1 received %d numbers from 0. Message source = %d, tag = %d\n", number_amount, status.MPI_SOURCE, status.MPI_TAG);
+        
+        // Probe the size first
         MPI_Status status;
-
-        MPI_Recv(numbers, MAX_NUMBERS, MPI_INT, 0,0, MPI_COMM_WORLD, &status);
-
+        MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
         MPI_Get_count(&status, MPI_INT, &number_amount);
+        int* number_buf = (int*)malloc(sizeof(int) * number_amount);
 
-        printf("1 received %d numbers from 0. Message source = %d, tag = %d\n", number_amount, status.MPI_SOURCE, status.MPI_TAG);
+        MPI_Recv(number_buf, number_amount, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("1 dynamically received %d numbers from 0.\n", number_amount);
+        free(number_buf);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 }
