@@ -17,8 +17,6 @@
 
 - [Computer Architecture](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/computer%20architecture)
 
-- [Development Notes](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/development%20notes)
-
 - [Network](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network)
   - [WebRTC](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network/WebRTC)
 
