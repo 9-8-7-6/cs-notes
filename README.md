@@ -20,8 +20,6 @@
 - [Network](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network)
   - [WebRTC](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network/WebRTC)
 
-- [Algorithm Notes](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/data%20structure%20and%20algorithm)
-
 - [Database](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database)
   - [PostgreSQL](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database/PostgreSQL)
 
