@@ -1258,6 +1258,8 @@ It enables **parallel execution** of different parts of a program **without crea
 
 ### Types of Work-Sharing Constructs
 
+`A work-sharing construct defines how parallel tasks are divided and distributed among threads.`
+
 #### 1. `for` / `do`
 
 - Distributes loop iterations among threads.  
@@ -1291,41 +1293,85 @@ for (int i = 0; i < 100; i++) {
 
 
 #### 2. `sections`
-- Divides code into independent sections, each executed by a separate thread.
+- A non-iterative work-sharing construct.
+- Divides code into independent sections, **each SECTION is once executed by one thread**.
 - Useful when tasks are distinct and can be performed concurrently.
 **Example:**
 ```c
-#pragma omp parallel sections
+int N = 100;
+int a[N], b[N], c[N], d[N];
+
+#pragma omp parallel num_thread(2) shared(a, b, c, d) private(i)
 {
-    #pragma omp section
-    { compute_A(); }
+  #pragma omp sections  // Specify sections
+  {
+      #pragma omp section   // 1st section
+      { compute_A(); }
 
-    #pragma omp section
-    { compute_B(); }
+      #pragma omp section   // 2nd section
+      { compute_B(); }
 
-    #pragma omp section
-    { compute_C(); }
-}
+      #pragma omp section   // 3rd section
+      { compute_C(); }
+  }   // end of section
+}   // end of parallel section
 ```
 
-#### 3. single
-- Ensures that only one thread executes a block of code, while others skip it.
+#### 3. `single`
+- Only one thread executes a block of code.
+- May be useful when dealing with sections of code not thread safe(such as I/O)
 - Commonly used for I/O operations or initializing shared resources without locks.
 
 **Example:**
 ```c
-#pragma omp parallel
+int input;
+#pragma omp parallel num_thread(10) shared(input)
 {
     #pragma omp single
     {
         printf("Initialization by one thread.\n");
+        scanf("%d", &input);
     }
 }
 ```
 
 #### Summary:
-- for → Divide loop iterations (data parallelism)
+- do / for → Divide loop iterations (data parallelism)
 - sections → Divide tasks (task parallelism)
 - single → Execute code by one thread only
 
 ---
+
+### Types of Synchronization Construct
+
+**Definition:**  
+A *synchronization construct* controls how threads coordinate and safely access shared resources.
+
+---
+
+#### 1. `master`
+- Executed **only** by the master thread.  
+- Guarantees that a specific thread (the master) performs the enclosed code block.  
+- **More efficient** than the `single` directive.  
+- **No implicit barrier** at the end.
+
+---
+
+#### 2. `critical`
+- Ensures that **only one thread** executes the enclosed section at a time.  
+- Other threads are **blocked** until the critical section is released.  
+
+---
+
+#### 3. `barrier`
+- All threads are **blocked** until **every thread** reaches the barrier.  
+- Ensures synchronization points within parallel regions.
+
+---
+
+#### 4. `atomic`
+- Guarantees that a specific **memory update** is performed **atomically**.  
+- Provides a lightweight, **mini-critical section** for simple operations.  
+
+---
+
