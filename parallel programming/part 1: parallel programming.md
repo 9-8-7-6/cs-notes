@@ -1375,3 +1375,6 @@ A *synchronization construct* controls how threads coordinate and safely access 
 
 ---
 
+### OpenMP Data Scope
+**OpenMP is based on shared memory programming model**
+- Most variables are shared by default
