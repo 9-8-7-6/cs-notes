@@ -427,7 +427,9 @@ Achieving the ideal \( S(p) = p \) is challenging because:
   Some arguments are passed by pointer; others are returned by value.
 
 #### Communicators and Groups
-- A **group** defines the collection of processes that can communicate with each other.
+- A **communicator** is a collection of processes that can send messages to each
+other, which is like objects of all processes.
+- A **group** defines the collection of processes that can communicate with each other, which is like a list of processes.
 - Each group is associated with a **communicator**.
 - `MPI_COMM_WORLD` is the predefined communicator that includes all processes.
 
@@ -441,16 +443,17 @@ Achieving the ideal \( S(p) = p \) is challenging because:
 ### Environment Management Routines
 
 - **`MPI_Init()`**  
-  Initializes(Set up) the MPI execution environment.
+  - Initializes(Set up) the MPI execution environment.
+  - This routine must be called by one thread only. That thread is called the main thread and must be the thread that calls MPI_Finalize.
 
 - **`MPI_Finalize()`**  
-  Terminates(Tear down) the MPI execution environment.
+  - Terminates(Tear down) the MPI execution environment.
 
 - **`MPI_Comm_size(comm, &size)`**  
-  Determines the total number of processes in the communicator group.
+  - Determines the total number of processes in the communicator group.
 
 - **`MPI_Comm_rank(comm, &rank)`**  
-  Determines the  rank (task ID) of the calling process within the communicator.  
+  - Determines the  rank (task ID) of the calling process within the communicator.  
   The rank identifies which process is executing.
 
 ---
@@ -487,6 +490,7 @@ MPI provides routines for sending and receiving messages between individual proc
   `MPI_Send(buffer, count, type, dest, tag, comm)`
 - **Receive:**  
   `MPI_Recv(buffer, count, type, source, tag, comm, status)`
+- comm == comm, tag == tag
 
 Blocking routines return only after the corresponding operation (send or receive) has completed.
 
