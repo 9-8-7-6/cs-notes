@@ -251,8 +251,32 @@ Issues arising in parallel computation models (like the Mandelbrot set generatio
     *   More suitable for light light loaded system.
 
 #### **Termination Detection**
-  > The mechanism to determine when the entire computation has successfully finished, especially in asynchronous or distributed systems where processes may not , or hard to know the global state.
+> The mechanism to determine when the entire computation has successfully finished, especially in asynchronous or distributed systems where processes may not have access to, or find it hard to determine, the global state.
+
+---
+
+##### 1. Single-Pass Ring Termination Algorithm
+*   **Precondition:** Must assume processes can **NOT** be re-activated once they terminate.
+*   **Workflow:**
+    1.  When **P0** terminates, it generates a `token` and passes it to the next process **P1**.
+    2.  When **Pi** receives the `token`:
+        *   It waits for its own termination.
+        *   Once terminated, it passes the `token` to the next process ($P_{i+1}$).
+    3.  When **P0** receives the `token` back, it confirms that all processes have finished, and a global termination message can be sent.
+
+##### 2. Dual-Pass Ring Termination Algorithm
+*   **Feature:**
+    It handles cases where processes **can be re-activated** (e.g., an idle process receiving a message after it has already "terminated").
+
+*   **Mechanism (Dijkstra's Token Coloring):**
+    It uses a **coloring scheme** (typically White/Black) for both processes and the token to detect in-transit messages.
+    *   **Process Color:** Turns **Black** if it sends a message (indicating it might have reactivated someone).
+    *   **Token Color:** Picks up the "Black" status from processes as it travels.
+    *   **Termination Rule:** The token must make a complete loop and return **White** to P0 to confirm global termination. If it returns **Black**, another pass is required.
 
 ## Divide-and-Conquer Pipelined Computations
+### Sorting Algorithms
+
+### B-Body Simulation
 
 ## Synchronous Computations
