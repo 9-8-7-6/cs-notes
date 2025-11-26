@@ -275,7 +275,321 @@ Issues arising in parallel computation models (like the Mandelbrot set generatio
     *   **Termination Rule:** The token must make a complete loop and return **White** to P0 to confirm global termination. If it returns **Black**, another pass is required.
 
 ## Divide-and-Conquer Pipelined Computations
+> Recursively divide a problem into sub-problems of the same form as the larger problem.
+
 ### Sorting Algorithms
+> Re-arranging a list of numbers into increasing (non-decreasing) order. This is a common and critical operation in large data processing.
+
+**Performance Goal:**
+*   **Sequential:** $O(n \log n)$ is typically the best average case.
+*   **Parallel (Ideal):** With $n$ processors, the goal is $\frac{n \log n}{n} = O(\log n)$.
+*   **Reality:** While theoretically obtainable, the **constant hidden in the order notation is extremely large**, making it difficult to achieve perfect scaling in practice.
+
+---
+
+#### 1. Bucket Sort
+**Concept:**
+*   The range of numbers is divided into $m$ equal regions (buckets).
+*   One bucket is assigned to each region.
+*   Items are distributed to buckets, then each bucket is sorted sequentially.
+*   **Assumption:** Works best when numbers are **uniformly distributed** (workload is balanced).
+
+```c
+/**
+ * MPI Bucket Sort
+ * Compile: mpicc bucket_sort.c -o bucket_sort
+ * Run:     mpirun -np 4 ./bucket_sort
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <mpi.h>
+
+#define DATA_SIZE 20  // Total number of data elements
+#define MAX_VAL 100   // Value range 0-99
+
+// Comparison function for qsort
+int compare(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int *local_bucket = NULL;
+    int local_count = 0;
+
+    if (rank == 0) {
+        // --- Master Process ---
+        printf("Generating %d random numbers with %d processes...\n", DATA_SIZE, size);
+        int raw_data[DATA_SIZE];
+        srand(time(NULL));
+        
+        // 1. Generate random numbers
+        printf("Original: ");
+        for (int i = 0; i < DATA_SIZE; i++) {
+            raw_data[i] = rand() % MAX_VAL;
+            printf("%d ", raw_data[i]);
+        }
+        printf("\n\n");
+
+        // 2. Prepare Buckets (Simple implementation: use 2D array for temporary storage)
+        // Range interval: Each rank is responsible for a range of (MAX_VAL / size)
+        int range = MAX_VAL / size + 1;
+        int *buckets[size];
+        int counts[size];
+        
+        for(int i=0; i<size; i++) {
+            buckets[i] = (int*)malloc(sizeof(int) * DATA_SIZE); // Allocate sufficient memory
+            counts[i] = 0;
+        }
+
+        // 3. Distribute data to temporary buckets
+        for (int i = 0; i < DATA_SIZE; i++) {
+            int target_rank = raw_data[i] / range;
+            if (target_rank >= size) target_rank = size - 1;
+            buckets[target_rank][counts[target_rank]++] = raw_data[i];
+        }
+
+        // 4. Send data to each Slave (including Rank 0 itself)
+        for (int i = 0; i < size; i++) {
+            if (i == 0) {
+                // Send to self
+                local_count = counts[i];
+                local_bucket = (int*)malloc(sizeof(int) * local_count);
+                for(int k=0; k<local_count; k++) local_bucket[k] = buckets[i][k];
+            } else {
+                // Tell Slave how much data to expect
+                MPI_Send(&counts[i], 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+                // Send actual data
+                MPI_Send(buckets[i], counts[i], MPI_INT, i, 1, MPI_COMM_WORLD);
+            }
+            free(buckets[i]);
+        }
+
+    } else {
+        // --- Slave Process ---
+        // 1. Receive data count
+        MPI_Recv(&local_count, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        
+        // 2. Receive data
+        local_bucket = (int*)malloc(sizeof(int) * local_count);
+        MPI_Recv(local_bucket, local_count, MPI_INT, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // --- All processes execute in parallel ---
+    
+    // 5. Local Sort (Sequential Sort per Bucket)
+    qsort(local_bucket, local_count, sizeof(int), compare);
+    
+    // 6. Send results back to Rank 0
+    if (rank != 0) {
+        MPI_Send(&local_count, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+        MPI_Send(local_bucket, local_count, MPI_INT, 0, 3, MPI_COMM_WORLD);
+    } else {
+        // --- Master collects results ---
+        int *sorted_data = (int*)malloc(sizeof(int) * DATA_SIZE);
+        int current_idx = 0;
+
+        // Insert Rank 0's own data
+        for (int i = 0; i < local_count; i++) {
+            sorted_data[current_idx++] = local_bucket[i];
+        }
+
+        // Receive data from other Ranks
+        for (int i = 1; i < size; i++) {
+            int recv_count;
+            MPI_Recv(&recv_count, 1, MPI_INT, i, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            int *recv_buf = (int*)malloc(sizeof(int) * recv_count);
+            MPI_Recv(recv_buf, recv_count, MPI_INT, i, 3, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            
+            for (int k = 0; k < recv_count; k++) {
+                sorted_data[current_idx++] = recv_buf[k];
+            }
+            free(recv_buf);
+        }
+
+        // 7. Display final result
+        printf("Sorted:   ");
+        for (int i = 0; i < DATA_SIZE; i++) {
+            printf("%d ", sorted_data[i]);
+        }
+        printf("\n");
+        free(sorted_data);
+    }
+
+    free(local_bucket);
+    MPI_Finalize();
+    return 0;
+}
+```
+
+##### Complexity Analysis
+
+**1. Sequential Bucket Sort:**
+*   Distribute numbers to buckets: $O(n)$
+*   Sequential sort each bucket: $m \times (\frac{n}{m} \log(\frac{n}{m}))$
+*   **Overall:**
+    $$ O(n + n \log(\frac{n}{m})) = O(n \log(\frac{n}{m})) $$
+
+**2. Parallelize Sorting (One process per bucket):**
+*   Distribute numbers to buckets: $O(n)$ (Sequential bottleneck)
+*   Sequential sort each bucket (Parallel): $\frac{n}{m} \log(\frac{n}{m})$
+*   **Overall:**
+    $$ O(n + \frac{n}{m} \log(\frac{n}{m})) $$
+
+**3. Further Parallelized Bucket Sort:**
+*   **Goal:** Parallelize the partitioning step to remove the $O(n)$ bottleneck.
+*   **Steps:**
+    1.  Partition numbers evenly across $m$ processes.
+    2.  Each process divides its local numbers into small buckets.
+    3.  **All-to-All Exchange:** Processes exchange small buckets to merge them into large global buckets.
+    4.  Each process sorts its specific large bucket sequentially.
+
+---
+
+#### 2. Merge Sort
+**Concept:** Divide & Conquer approach.
+
+```c
+/**
+ * MPI Merge Sort
+ * Compile: mpicc merge_sort.c -o merge_sort
+ * Run:     mpirun -np 4 ./merge_sort
+ * Note:    This example assumes DATA_SIZE is divisible by the number of processes.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <mpi.h>
+
+#define DATA_SIZE 32
+
+// Merge two sorted arrays
+int* merge_arrays(int *arr1, int n1, int *arr2, int n2) {
+    int *result = (int*)malloc((n1 + n2) * sizeof(int));
+    int i = 0, j = 0, k = 0;
+    
+    while (i < n1 && j < n2) {
+        if (arr1[i] < arr2[j]) 
+            result[k++] = arr1[i++];
+        else 
+            result[k++] = arr2[j++];
+    }
+    while (i < n1) result[k++] = arr1[i++];
+    while (j < n2) result[k++] = arr2[j++];
+    
+    return result;
+}
+
+// Comparison function for qsort
+int compare(const void *a, const void *b) {
+    return (*(int *)a - *(int *)b);
+}
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int *global_data = NULL;
+    int local_n = DATA_SIZE / size; // Number of elements per process
+    int *local_data = (int*)malloc(local_n * sizeof(int));
+
+    if (rank == 0) {
+        // --- Master: Generate data ---
+        global_data = (int*)malloc(DATA_SIZE * sizeof(int));
+        srand(time(NULL));
+        printf("Original: ");
+        for (int i = 0; i < DATA_SIZE; i++) {
+            global_data[i] = rand() % 100;
+            printf("%d ", global_data[i]);
+        }
+        printf("\n\n");
+    }
+
+    // 1. Scatter: Distribute data evenly to all processes
+    MPI_Scatter(global_data, local_n, MPI_INT, 
+                local_data, local_n, MPI_INT, 
+                0, MPI_COMM_WORLD);
+
+    // 2. Local Sort: Sort local partition first
+    qsort(local_data, local_n, sizeof(int), compare);
+
+    // 3. Tree Reduction Merge
+    // In each step, half of the processes send data, the other half receive and merge
+    int step = 1;
+    while (step < size) {
+        if (rank % (2 * step) == 0) {
+            // --- Receiver (Merge) ---
+            int sender = rank + step;
+            if (sender < size) {
+                int recv_count;
+                // Simplified logic: Assuming count after merge is calculable.
+                // In practice, if data is uneven, need to send count first.
+                // In this perfect binary case, incoming size equals local size.
+                int incoming_n = local_n; 
+
+                int *recv_buf = (int*)malloc(incoming_n * sizeof(int));
+                
+                MPI_Recv(recv_buf, incoming_n, MPI_INT, sender, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                
+                // Merge incoming data with local data
+                int *new_data = merge_arrays(local_data, local_n, recv_buf, incoming_n);
+                
+                // Update local data pointer and size
+                free(local_data);
+                free(recv_buf);
+                local_data = new_data;
+                local_n += incoming_n;
+            }
+        } else {
+            // --- Sender ---
+            int receiver = rank - step;
+            // Send local data to receiver
+            MPI_Send(local_data, local_n, MPI_INT, receiver, 0, MPI_COMM_WORLD);
+            // Process finishes task after sending, break loop
+            break; 
+        }
+        step *= 2;
+    }
+
+    // 4. Output result
+    if (rank == 0) {
+        printf("Sorted:   ");
+        for (int i = 0; i < local_n; i++) {
+            printf("%d ", local_data[i]);
+        }
+        printf("\n");
+        free(global_data);
+    }
+
+    free(local_data);
+    MPI_Finalize();
+    return 0;
+}
+```
+
+**Complexity:**
+*   **Sequential:** $O(n \log n)$
+
+**Parallel Analysis (Tree-based communication):**
+*   **Communication Overhead ($T_{comm}$):**
+    Data movement decreases by half at each level.
+    $$ T_{comm} = O(2(\frac{n}{2} + \frac{n}{4} + \dots + 1)) = O(n) $$
+
+*   **Computation Time ($T_{comp}$):**
+    Merge operations at each level.
+    $$ T_{comp} = O(n + \frac{n}{2} + \frac{n}{4} + \dots + 2) = O(n) $$
+
+*   **Conclusion:** In a standard parallel merge sort, the complexity often reduces to $O(n)$ due to the merging and communication overhead, rather than the ideal $O(\log n)$.
 
 ### B-Body Simulation
 
