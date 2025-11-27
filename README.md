@@ -5,23 +5,23 @@
 
 ---
 
-- [Operating System](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/operating%20systems)
+- [Operating System](https://github.com/9-8-7-6/cs-notes/tree/main/operating%20systems)
 
-- [Parallel Programming](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/parallel%20programming)
+- [Parallel Programming](https://github.com/9-8-7-6/cs-notes/tree/main/parallel%20programming)
 
-- [System Design](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/system%20design)
+- [System Design](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design)
   - [Scalable Software Architectures](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design/scalable%20software%20architectures)
 
 
-- [Digital Design](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/digital%20design)
+- [Digital Design](https://github.com/9-8-7-6/cs-notes/tree/main/digital%20design)
 
-- [Computer Architecture](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/computer%20architecture)
+- [Computer Architecture](https://github.com/9-8-7-6/cs-notes/tree/main/computer%20architecture)
 
-- [Network](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network)
-  - [WebRTC](https://github.com/9-8-7-6/cs-notes/tree/776c27c076b9a235bcedb85d2bbfa0f63c43debc/network/WebRTC)
+- [Network](https://github.com/9-8-7-6/cs-notes/tree/main/network/WebRTC)
+  - [WebRTC](https://github.com/9-8-7-6/cs-notes/blob/main/network/WebRTC/webrtc.md)
 
-- [Database](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database)
-  - [PostgreSQL](https://github.com/9-8-7-6/cs-notes/tree/b12b17220555955868fe1dc32b9fd32df3569a09/database/PostgreSQL)
+- [Database](https://github.com/9-8-7-6/cs-notes/tree/main/database)
+  - [PostgreSQL](https://github.com/9-8-7-6/cs-notes/tree/main/database/PostgreSQL)
 
 ---
 
