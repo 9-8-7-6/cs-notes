@@ -62,8 +62,8 @@ for(oldrow = row; oldrow < (row + 10); oldrow++) {
 The Mandelbrot set is a set of complex numbers that are quasi-stable (they do not diverge to infinity under iteration).
 
 **Basic Formula:**
-$$ Z_0 = C $$
-$$ Z_{k+1} = Z_k^2 + C $$
+*   $Z_0 = C$, 
+$Z_{k+1} = Z_k^2 + C$
 
 Where:
 *   $C = a + bi$ (a complex number representing the pixel position)
@@ -79,21 +79,21 @@ Let $C = C_{real} + C_{imag}i$ and $Z_k = Z_{real} + Z_{imag}i$.
 
 Substituting into $Z_{k+1} = Z_k^2 + C$:
 
-$$
+$
 \begin{aligned}
 Z_{k+1} &= (Z_{real} + Z_{imag}i)^2 + (C_{real} + C_{imag}i) \\
         &= (Z_{real}^2 - Z_{imag}^2 + 2Z_{real}Z_{imag}i) + (C_{real} + C_{imag}i)
 \end{aligned}
-$$
+$
 
 Grouping the Real and Imaginary parts gives the update rules for the next iteration:
 
-$$
+$
 \begin{cases}
 Z_{real\_next} = Z_{real}^2 - Z_{imag}^2 + C_{real} \\
 Z_{imag\_next} = 2 \cdot Z_{real} \cdot Z_{imag} + C_{imag}
 \end{cases}
-$$
+$
 
 ---
 
@@ -266,13 +266,17 @@ Issues arising in parallel computation models (like the Mandelbrot set generatio
 
 ##### 2. Dual-Pass Ring Termination Algorithm
 *   **Feature:**
-    It handles cases where processes **can be re-activated** (e.g., an idle process receiving a message after it has already "terminated").
+    It handles cases where processes **may be re-activated** (e.g., an idle process later receives a delayed message).
 
 *   **Mechanism (Dijkstra's Token Coloring):**
-    It uses a **coloring scheme** (typically White/Black) for both processes and the token to detect in-transit messages.
-    *   **Process Color:** Turns **Black** if it sends a message (indicating it might have reactivated someone).
-    *   **Token Color:** Picks up the "Black" status from processes as it travels.
-    *   **Termination Rule:** The token must make a complete loop and return **White** to P0 to confirm global termination. If it returns **Black**, another pass is required.
+    The algorithm uses a **two-pass token ring** with a **coloring scheme** to detect in-transit messages and reactivation.
+    *   **Process Color:** A process may turn the token Black if it sends a message to a lower-numbered process in the ring, meaning that process might be reactivated later.
+    *   **Token Color propagation:** The token becomes Black if any process marks it Black during its circulation.
+    *   **Two-pass logic:**: 
+        *   **Pass 1:** Token makes a full loop to check whether any process may still trigger reactivation (Black indicates possible in-transit messages).
+        *   **Pass 2:** If Pass 1 ends with a White token, a second pass confirms that the system is stable and no delayed messages remain.
+    *   **Termination Rule:** Global termination is confirmed **only if the token returns to P0 White after the second pass.**
+    If the token returns **Black**, another two-pass cycle is started.
 
 ## Divide-and-Conquer Pipelined Computations
 > Recursively divide a problem into sub-problems of the same form as the larger problem.
@@ -434,13 +438,13 @@ int main(int argc, char** argv) {
 *   Distribute numbers to buckets: $O(n)$
 *   Sequential sort each bucket: $m \times (\frac{n}{m} \log(\frac{n}{m}))$
 *   **Overall:**
-    $$ O(n + n \log(\frac{n}{m})) = O(n \log(\frac{n}{m})) $$
+    $O(n + n \log(\frac{n}{m})) = O(n \log(\frac{n}{m}))$
 
 **2. Parallelize Sorting (One process per bucket):**
 *   Distribute numbers to buckets: $O(n)$ (Sequential bottleneck)
 *   Sequential sort each bucket (Parallel): $\frac{n}{m} \log(\frac{n}{m})$
 *   **Overall:**
-    $$ O(n + \frac{n}{m} \log(\frac{n}{m})) $$
+    $O(n + \frac{n}{m} \log(\frac{n}{m}))$
 
 **3. Further Parallelized Bucket Sort:**
 *   **Goal:** Parallelize the partitioning step to remove the $O(n)$ bottleneck.
@@ -581,15 +585,219 @@ int main(int argc, char** argv) {
 *   **Sequential:** $O(n \log n)$
 
 **Parallel Analysis (Tree-based communication):**
+In a tree-structured reduction (like the MPI implementation provided earlier), the complexity is dominated by the merging steps as data moves up the tree.
+
 *   **Communication Overhead ($T_{comm}$):**
     Data movement decreases by half at each level.
-    $$ T_{comm} = O(2(\frac{n}{2} + \frac{n}{4} + \dots + 1)) = O(n) $$
+    $T_{comm} = O(2(\frac{n}{2} + \frac{n}{4} + \dots + 1)) = O(n)$
 
 *   **Computation Time ($T_{comp}$):**
     Merge operations at each level.
-    $$ T_{comp} = O(n + \frac{n}{2} + \frac{n}{4} + \dots + 2) = O(n) $$
+    $T_{comp} = O(n + \frac{n}{2} + \frac{n}{4} + \dots + 2) = O(n)$
 
 *   **Conclusion:** In a standard parallel merge sort, the complexity often reduces to $O(n)$ due to the merging and communication overhead, rather than the ideal $O(\log n)$.
+
+#### 3. Quick Sort
+**Concept:** Iteratively pick pivot and partition numbers.
+
+```c
+/**
+ * MPI Quick Sort
+ * Compile: mpicc quick_sort.c -o quick_sort
+ * Run:     mpirun -np 4 ./quick_sort
+ * Note:    This example assumes DATA_SIZE is divisible by the number of processes.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include <math.h>
+#include <mpi.h>
+
+#define DATA_SIZE 32
+
+// Comparison function for qsort
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int partition(int *arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    
+    for (int j = low; j < high; j++) {
+        if (arr[j] < pivot) {
+            i++;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+
+    swap(&arr[i + 1], &arr[high]);
+    return i + 1;
+}
+
+void quicksort(int *arr, int low, int high) {
+    if (low < high) {
+        int p = partition(arr, low, high);
+        quicksort(arr, low, p - 1);
+        quicksort(arr, p + 1, high);
+    }
+}
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int *global_data = NULL;
+    int local_n = DATA_SIZE / size; // Number of elements per process
+    int *local_data = (int*)malloc(local_n * sizeof(int));
+
+    if (rank == 0) {
+        // --- Master: Generate data ---
+        global_data = (int*)malloc(DATA_SIZE * sizeof(int));
+        srand(time(NULL));
+        printf("Original: ");
+        for (int i = 0; i < DATA_SIZE; i++) {
+            global_data[i] = rand() % 100;
+            printf("%d ", global_data[i]);
+        }
+        printf("\n\n");
+    }
+
+    // 1. Scatter: Distribute data evenly to all processes
+    MPI_Scatter(global_data, local_n, MPI_INT, 
+                local_data, local_n, MPI_INT, 
+                0, MPI_COMM_WORLD);
+
+    int dimensions = (int)log2(size);
+
+    for (int i = 0; i < dimensions; i++) {
+        int pivot = 0;
+        if (rank == 0) {
+            if (local_n > 0) {
+                pivot = local_data[0];
+            }
+            else {
+                pivot = 0;
+            }
+        }
+    
+        MPI_Bcast(&pivot, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        int *small_list = (int*)malloc(local_n * sizeof(int));
+        int *large_list = (int*)malloc(local_n * sizeof(int));
+        int s_count = 0;
+        int l_count = 0;
+
+        for(int k = 0; k < local_n; k++) {
+            if (local_data[k] <= pivot) {
+                small_list[s_count++] = local_data[k];
+            } else {
+                large_list[l_count++] = local_data[k];
+            }
+        }
+
+        int partner = rank ^ (1 << (dimensions - 1 - i));
+
+        int *recv_buf = NULL;
+        int recv_count = 0;
+
+        if(rank < partner) {
+            MPI_Send(&l_count, 1, MPI_INT, partner, 0, MPI_COMM_WORLD);
+            MPI_Send(large_list, l_count, MPI_INT, partner, 1, MPI_COMM_WORLD);
+
+            MPI_Recv(&recv_count, 1, MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            recv_buf = (int*)malloc(recv_count * sizeof(int));
+            MPI_Recv(recv_buf, recv_count, MPI_INT, partner, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            free(local_data);
+            local_n = s_count + recv_count;
+            local_data = (int*)malloc(local_n * sizeof(int));
+
+            memcpy(local_data, small_list, s_count * sizeof(int));
+            memcpy(local_data + s_count, recv_buf, recv_count * sizeof(int));
+        }
+        else {
+            MPI_Recv(&recv_count, 1, MPI_INT, partner, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            recv_buf = (int*)malloc(recv_count * sizeof(int));
+            MPI_Recv(recv_buf, recv_count, MPI_INT, partner, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            MPI_Send(&s_count, 1, MPI_INT, partner, 0, MPI_COMM_WORLD);
+            MPI_Send(small_list, s_count, MPI_INT, partner, 1, MPI_COMM_WORLD);
+
+            free(local_data);
+            local_n = l_count + recv_count;
+            local_data = (int*)malloc(local_n * sizeof(int));
+            
+            memcpy(local_data, recv_buf, recv_count * sizeof(int));
+            memcpy(local_data + recv_count, large_list, l_count * sizeof(int));
+        }
+
+        free(small_list);
+        free(large_list);
+        if(recv_buf) {
+            free(recv_buf);
+        }
+    }
+
+    quicksort(local_data, 0, local_n - 1);
+
+    int *recv_counts = NULL;
+    int *displs = NULL;
+    int *final_data = NULL;
+
+    if (rank == 0) {
+        recv_counts = (int*)malloc(size * sizeof(int));
+    }
+
+    MPI_Gather(&local_n, 1, MPI_INT, recv_counts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        displs = (int*)malloc(size * sizeof(int));
+        final_data = (int*)malloc(DATA_SIZE * sizeof(int));
+
+        displs[0] = 0;
+        for (int i = 1; i < size; i++) {
+            displs[i] = displs[i - 1] + recv_counts[i - 1];
+        }
+    }
+
+    MPI_Gatherv(local_data, local_n, MPI_INT, 
+                final_data, recv_counts, displs, MPI_INT, 
+                0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        printf("Sorted:   ");
+        int total_len = displs[size-1] + recv_counts[size-1];
+        for (int i = 0; i < total_len; i++) {
+            printf("%d ", final_data[i]);
+        }
+        printf("\n");
+        free(global_data);
+        free(recv_counts);
+        free(displs);
+        free(final_data);
+    }
+
+    free(local_data);
+    MPI_Finalize();
+    return 0;
+}
+```
+
+**Complexity:**
+*   **Sequential:** $O(n \log n)$
+
+*   **Parallel:** $O(n)$
+
+*   **Conclusion:** In a standard parallel quick sort, the complexity often reduces to $O(n)$ due to the merging and communication overhead, rather than the ideal $O(\log n)$.
 
 ### B-Body Simulation
 
