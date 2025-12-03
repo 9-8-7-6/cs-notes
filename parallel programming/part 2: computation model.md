@@ -79,21 +79,12 @@ Let $C = C_{real} + C_{imag}i$ and $Z_k = Z_{real} + Z_{imag}i$.
 
 Substituting into $Z_{k+1} = Z_k^2 + C$:
 
-$
-\begin{aligned}
-Z_{k+1} &= (Z_{real} + Z_{imag}i)^2 + (C_{real} + C_{imag}i) \\
-        &= (Z_{real}^2 - Z_{imag}^2 + 2Z_{real}Z_{imag}i) + (C_{real} + C_{imag}i)
-\end{aligned}
-$
+$Z_{k+1} = (Z_{real} + Z_{imag}i)^2 + (C_{real} + C_{imag}i) = (Z_{real}^2 - Z_{imag}^2 + 2Z_{real}Z_{imag}i) + (C_{real} + C_{imag}i)$
 
 Grouping the Real and Imaginary parts gives the update rules for the next iteration:
 
-$
-\begin{cases}
-Z_{real\_next} = Z_{real}^2 - Z_{imag}^2 + C_{real} \\
-Z_{imag\_next} = 2 \cdot Z_{real} \cdot Z_{imag} + C_{imag}
-\end{cases}
-$
+$Z_{real\_next} = Z_{real}^2 - Z_{imag}^2 + C_{real}
+Z_{imag\_next} = 2 \cdot Z_{real} \cdot Z_{imag} + C_{imag}$
 
 ---
 
@@ -597,6 +588,8 @@ In a tree-structured reduction (like the MPI implementation provided earlier), t
 
 *   **Conclusion:** In a standard parallel merge sort, the complexity often reduces to $O(n)$ due to the merging and communication overhead, rather than the ideal $O(\log n)$.
 
+---
+
 #### 3. Quick Sort
 **Concept:** Iteratively pick pivot and partition numbers.
 
@@ -799,6 +792,72 @@ int main(int argc, char** argv) {
 
 *   **Conclusion:** In a standard parallel quick sort, the complexity often reduces to $O(n)$ due to the merging and communication overhead, rather than the ideal $O(\log n)$.
 
-### B-Body Simulation
+---
+
+#### 4. Bitonic Mergesort
+A parallel sorting algorithm suitable for hardware implementation (Sorting Networks).
+
+*   **Core Concept:**
+    *   Based on **Bitonic Sequences**.
+    *   **Removes the $O(N)$ bottleneck** found in the traditional merge step (which requires sequential scanning).
+*   **Sequence Definitions:**
+    *   **Monotonic sequence:** Elements are strictly increasing or decreasing.
+        *   *Example:* `1, 2, 3, 4, 5, 7, 8, 9`
+    *   **Bitonic sequence:** A sequence that increases then decreases (or is a circular shift of such a sequence).
+        *   *Example:* `3, 5, 8, 9, 7, 4, 2, 1` (Increases to 9, then decreases).
+*   **Basic Operation:**
+    *   **Compare-and-Exchange:** Compares $a_i$ with $a_{i + k}$ (commonly $k = n/2$ in the merge step) and swaps them if necessary to maintain order.
+
+**Complexity:**
+*   **Bitonic Merge (Merge step only):** **$O(\log n)$**
+    *   The parallel time required to convert a bitonic sequence into a sorted sequence.
+*   **Bitonic Sort (Full algorithm):** **$O(\log^2 n)$**
+    *   The parallel time required to sort an arbitrary sequence (building bitonic sequences recursively).
+
+---
+
+#### 5. Rank Sort
+A simple enumeration-based sorting algorithm.
+
+*   **Mechanism:**
+    *   For each element $x$ in the list, count the number of elements that are smaller than $x$.
+    *   This count represents the final **rank** (index) of $x$ in the sorted list.
+
+**Complexity:**
+*   **Sequential:** **$O(n^2)$**
+    *   Requires comparing every element against every other element.
+*   **Parallel:** **$O(n)$**
+    *   Assuming **$n$ processors**: Each processor handles one element and scans the array (taking $n$ steps).
+    *   *Note: With $n^2$ processors and parallel reduction, this can be reduced to $O(\log n)$.*
+
+---
+
+#### 6. Counting Sort
+A non-comparison based integer sorting algorithm.
+
+*   **Mechanism:**
+    1.  **Histogram:** Count the frequency of each number.
+    2.  **Prefix Sum (Scan):** Calculate the cumulative sum of frequencies to determine the starting position for each number.
+    3.  **Place:** Move numbers to their sorted positions.
+*   **Key to Parallelism:**
+    *   Using **Parallel Prefix Sum** to calculate indices quickly, avoiding race conditions during the placement phase.
+
+**Complexity:**
+*   **Sequential:** **$O(n + m)$**
+    *   Where $n$ is the number of elements and $m$ is the range of the input values.
+*   **Parallel:** **$O(\log n)$**
+    *   The time complexity is dominated by the **Parallel Prefix Sum** step, which takes logarithmic time on parallel hardware.
+
+---
+
+## Pipelined Computations
+
+### Adding Numbers
+
+### Sorting Numbers
+
+### Linear Equation Solver
+
+---
 
 ## Synchronous Computations
