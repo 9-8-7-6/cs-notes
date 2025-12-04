@@ -49,6 +49,7 @@ Flynn’s taxonomy classifies computer architectures from the **processing unit 
 
 ### 2. SIMD (Single Instruction, Multiple Data)  
 - All processing units execute the **same instruction** simultaneously.  
+- The processor may be composed of a single control unit and multiple datapaths.
 - **Multiple Data**: Each processing unit works on a different element of the data.  
 - Example: GPUs, vector processors.  
 
@@ -842,6 +843,28 @@ Instructions of individual threads may be interleaved, leading to **race conditi
 - A **critical section** — the code segment accessing shared memory or shared resources — can be protected using **`pthread_mutex_lock()`** and **`pthread_mutex_unlock()`** to ensure only one thread executes that section at a time.  
 - Whenever shared memory or shared variables exist, those sections should be clearly identified and protected as **critical sections**.
 
+
+```c
+int counter;    // Initialize to 0
+sem_t count_sem;    // Initialize to 1
+sem_t barrier_sem;  // Initialize to 0
+
+Void* Thread_work() {
+    sem_wait(&count_sem);
+    If (counter == thread_count - 1) {
+        counter = 0;
+        sem_post(count_sem);
+        for ( j = 0; j < thread_count - 1; j ++) {
+            sem_post(&barrier_sem);
+        }
+    } else {
+        counter++;
+        sem_post(&count_sem);
+        sem_wait(&barrier_sem);
+    }
+}
+```
+
 ---
 
 #### Synchronization
@@ -854,13 +877,13 @@ For a detailed explanation of process synchronization concepts and common mechan
 
 #### Condition Variables (CV) in Pthread
 
-- In Pthread, **Condition Variable (CV)'s** type is `pthread_cond_t`.
-- Condition variable (CV) in pthreads is a synchronization mechanism that allows threads to wait (sleep) until a specific condition becomes true, and be awakened by another thread.
+- Type is `pthread_cond_t`.
+- A synchronization mechanism that allows threads to wait (sleep) until a specific condition becomes true, and be awakened by another thread.
 - Common routines:
   - `pthread_cond_init()` — initialize a condition variable.
   - `pthread_cond_wait(&theCV, &somelock)` — release the lock and wait for a signal.
-  - `pthread_cond_signal(&theCV)` — wake up one waiting thread.
-  - `pthread_cond_broadcast(&theCV)` — wake up all waiting threads.
+  - `pthread_cond_signal(&theCV)` — unlock one blocked thread.
+  - `pthread_cond_broadcast(&theCV)` — unlock all blocked threads.
 
 - Example
 ```c 
