@@ -11,6 +11,7 @@
     *   NVIDIA GPUs are composed of multiple SMs.
     *   Each SM functions similarly to a SIMD processor.
 *   **Streaming Processors (SPs) / CUDA Cores:**
+    *   Each SM is composed of multiple SPs.
     *   These are the individual datapaths (cores) within an SM.
 *   **SIMT (Single Instruction, Multiple Threads):**
     *   NVIDIA uses the term **SIMT** instead of SIMD to describe its specific execution model.
@@ -51,6 +52,9 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 *   **Sequential vs. Parallel:**
     *   Historically, only **one kernel** executes at a time on the device.
     *   However, **many threads** execute that single kernel simultaneously.
+*   **Asynchronous Execution:**
+    *   The CUDA kernel launch is **asynchronous**. The host function returns immediately after notifying the system to start the kernel.
+    *   **Synchronization:** We need `cudaDeviceSynchronize()` to force the main function (Host) to wait until all executing kernels on the device are completed.
 
 #### 2. SIMT (Single Instruction, Multiple Threads)
 *   Each thread executes the **same code instructions**.
@@ -67,11 +71,20 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 
     $ \text{Grid} \supset \text{Thread Blocks} \supset \text{Threads} $
 
+#### 4. Threads, blocks, grids
+*   **Thread block** is a collection of threads run on a single SM.
+*   function <<<number, thread_count>>>(), number at the first value in angle brackets means numbers of SM/ thread blocks, the second value means the numbers of threads per SM/thread block.
+*   CUDA organizes threads into blocks and grids.
+*   A grid is the collection of thread block started by a kernel.
+*   **ThreadIdx**: the rank or index of the thread in its thread block.
+*   **BlockDim**: the dimensions, shape, or size of the thread blocks.
+
+
 ### Development Workflow
 *   **API:** CUDA is the API for GPGPU (General-Purpose computing on Graphics Processing Units) programming.
 *   **Dual-Code Structure:** A typical CUDA application requires writing two parts:
     1.  **Host Code:** Runs on the CPU.
-    2.  **Device Code:** Runs on the GPU (Kernels).
+    2.  **Device (Kernel) Code:** Runs on the GPU. It follows the **SPMD** (Single-Program Multiple-Data) model, where each thread runs a copy of the same code on its own data.
 *   **Compilation:**
     *   CUDA programs cannot be compiled with an ordinary C compiler (like `gcc`).
     *   They require a specific **CUDA compiler (NVCC)** to generate machine language for both the host processor and the device processor.
