@@ -16,7 +16,19 @@
 *   **SIMT (Single Instruction, Multiple Threads):**
     *   NVIDIA uses the term **SIMT** instead of SIMD to describe its specific execution model.
 
+### Thread Level Scheduling - Warp
+*   Software: grid -> blocks -> threads
+*   Hardware: GPU(device) -> SM(multicore processor) -> core
+*   Inside an SM, threads are launched in groups of 32 called warps. Threads in a warp execute the same instruction in parallel, while warps and blocks execute logically in parallel.
+
+#### Thread group limits
+*   Maximum execution concurrency
+    *   Maximum number of resident grids per device: 32
+    *   Maximum number of threads per multiprocessor: 2048
+    *   Maximum number of threads per block: 1024
+
 ### Memory Hierarchy
+*   **Local Memory**
 *   **Shared Memory (Fast):**
     *   A small block of memory located inside each SM.
     *   Shared only among the internal SPs of that specific SM.
@@ -44,6 +56,14 @@
 
 ## 3. CUDA Programming
 
+### CUDA Programming Terminology
+*   Host: CPU
+*   Device: GPU
+*   Kernel: functions executed on GPU
+*   Thread: the basic execution unit
+*   Block:  a group of threads
+*   Grid: a group of blocks
+
 ### The Kernel
 A **Kernel** is a function that runs on the GPU and is executed by **many concurrent threads**.
 
@@ -68,17 +88,11 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 *   **Grouping Structure:**
     1.  **Threads** are grouped into **Thread Blocks**.
     2.  A Kernel launch creates a **Grid** of thread blocks.
-
-    $ \text{Grid} \supset \text{Thread Blocks} \supset \text{Threads} $
-
-#### 4. Threads, blocks, grids
 *   **Thread block** is a collection of threads run on a single SM.
-*   function <<<number, thread_count>>>(), number at the first value in angle brackets means numbers of SM/ thread blocks, the second value means the numbers of threads per SM/thread block.
-*   CUDA organizes threads into blocks and grids.
+*   kernelFunc<<<numBlocks, threadsPerBlock, sharedMemSize, streamID>>>(), numBlocks at the first value in angle brackets means number of thread blocks in the grid, the second value means the numbers of number of threads per block.
 *   A grid is the collection of thread block started by a kernel.
 *   **ThreadIdx**: the rank or index of the thread in its thread block.
-*   **BlockDim**: the dimensions, shape, or size of the thread blocks.
-
+*   **BlockDim**: the number of threads in a block (in x, y, z dimensions).
 
 ### Development Workflow
 *   **API:** CUDA is the API for GPGPU (General-Purpose computing on Graphics Processing Units) programming.
