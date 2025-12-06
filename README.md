@@ -12,17 +12,6 @@
 - [System Design](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design)
   - [Scalable Software Architectures](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design/scalable%20software%20architectures)
 
-
-- [Digital Design](https://github.com/9-8-7-6/cs-notes/tree/main/digital%20design)
-
-- [Computer Architecture](https://github.com/9-8-7-6/cs-notes/tree/main/computer%20architecture)
-
-- [Network](https://github.com/9-8-7-6/cs-notes/tree/main/network/WebRTC)
-  - [WebRTC](https://github.com/9-8-7-6/cs-notes/blob/main/network/WebRTC/webrtc.md)
-
-- [Database](https://github.com/9-8-7-6/cs-notes/tree/main/database)
-  - [PostgreSQL](https://github.com/9-8-7-6/cs-notes/tree/main/database/PostgreSQL)
-
 ---
 
 ## Disclaimer
