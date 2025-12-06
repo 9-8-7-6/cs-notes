@@ -12,6 +12,7 @@
 - [System Design](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design)
   - [Scalable Software Architectures](https://github.com/9-8-7-6/cs-notes/tree/main/system%20design/scalable%20software%20architectures)
 
+- [Machine Learning](https://github.com/9-8-7-6/cs-notes/tree/main/machine%20learning)
 ---
 
 ## Disclaimer
