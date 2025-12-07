@@ -901,3 +901,33 @@ else {
 ---
 
 ## Synchronous Computations
+
+### Definition: all the processes **synchronized** at regular point.
+
+*   Barrier: basic mechanism for synchronizing processes, all processes can only continue from this point when all processes have reached it.
+
+*   Deadlock: common problem occurs from synchronization, a set of blocked processes each holding some resources and waiting to require a resource held by another process in the set.
+
+### Example
+*   Prefix Sum
+    *   Sequential code: $O(n)$
+    ```c
+    sum[0] = x[0];
+    for(i = 1;i < n;i++) {
+        sum[i] = sum[i - 1] + x[i];
+    }
+    ```
+
+    *   Parallel Code: O(log(n))
+    ```c
+    // Data Parallelism Code
+    for(j = 0; j < log(n); j++) {
+        forall(i = 0; i < n; i++) {
+            if(i >= 2^j){
+                x[i] = x[i] + x[i - 2 ^ j];
+            }
+        }
+    }
+    ```
+
+*   System of Linear Equations
