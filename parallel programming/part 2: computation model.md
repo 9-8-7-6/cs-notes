@@ -853,10 +853,50 @@ A non-comparison based integer sorting algorithm.
 ## Pipelined Computations
 
 ### Adding Numbers
+*   Compute sum of an array:
+
+Compute sum of an array:
+```c
+for(i=0;i<n;i++)
+    sum += A[i]
+```
+
+Pipeline for an unfolded loop:
+```c
+    sum += A[0], sum += A[1], sum += A[2],...
+```
+
+The basic code for Pi:
+```c
+if (Pi == P0) {
+    sum = local_val;
+    send(&sum, Pi+1);
+}
+else if (Pi == Pn) {
+    recv(&incoming_sum, Pi-1);
+    total_sum = incoming_sum + local_val; 
+}
+else {
+    recv(&incoming_sum, Pi-1);
+    sum = incoming_sum + local_val; 
+    send(&sum, Pi+1); 
+}
+```
 
 ### Sorting Numbers
-
-### Linear Equation Solver
+*   Insertion Sort
+    *   Each process holds one number
+    *   Compare & move the larger number to the right.
+```c
+recv(&number, Pi-1);
+if (number >= x) {
+    send(&number, Pi+1);
+}
+else {
+    send(&x, Pi+1);
+    x = number;
+}
+```
 
 ---
 
