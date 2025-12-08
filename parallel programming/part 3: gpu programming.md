@@ -17,8 +17,8 @@
     *   NVIDIA uses the term **SIMT** instead of SIMD to describe its specific execution model.
 
 ### Thread Level Scheduling - Warp
-*   Software: grid -> blocks -> threads
-*   Hardware: GPU(device) -> SM(multicore processor) -> core
+*   Software: threads -> blocks -> grid
+*   Hardware: core -> SM(multicore processor) -> GPU(device)
 *   Inside an SM, threads are launched in groups of 32 called warps. Threads in a warp execute the same instruction in parallel, while warps and blocks execute logically in parallel.
 
 #### Thread group limits
