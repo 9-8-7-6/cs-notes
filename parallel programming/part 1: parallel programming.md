@@ -1154,11 +1154,21 @@ public void run() {
 - **Model:** Follows the *Fork-Join* model  
   - The master thread forks a number of slave threads.
   - Tasks are divided among these threads.
-  - Threads rejoin the master after completing their work.  
+  - Threads rejoin the master after completing their work.
 - **Compiler Directive-Based:**  
   The compiler interprets OpenMP directives to automatically create, manage, and synchronize threads.
+- **Compile command:**
+```c
+  gcc -g -Wall -fopenmp -o hello_world hello_world.c
+```
 
-### Example
+### Scope of variable
+* **Shared scope**: A variable that all threads can access.
+* **private scope**:A variable can only accessed by a single thread.
+* Variables declared **before** a `parallel` directive are **shared** by default.
+* Variables declared **inside** a `parallel` block (e.g., local variables in functions) are **private** by default.
+
+### OpenMP Example
 
 ```c
 #include <omp.h>
