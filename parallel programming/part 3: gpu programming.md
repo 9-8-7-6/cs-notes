@@ -6,6 +6,19 @@
 
 ## 1. GPU Architecture & Multi-GPU
 
+### GPU
+*   A specialized chip designed for rapidly display and visualization.
+*   Massively multithreaded manycore chips.
+
+### GPGPU(General-Purpose Graphic Processing Unit)
+*   Exploit data parallelism for solving embarrassingly parallel tasks and numeric computations.
+*   Programmable:
+    *   Early GPGPU: using libraries in computer graphic, e.g. OpenGL or DirectX.
+    *   Now CUDA and openCL provides an extension to C and C++ enable parallel programming on GPUs.
+
+### NVLink
+*   Data transfor between GPUs.
+
 ### NVIDIA GPU Structure
 *   **Streaming Multiprocessors (SMs):**
     *   NVIDIA GPUs are composed of multiple SMs.
@@ -29,7 +42,7 @@
 
 ### Memory Hierarchy
 *   **Local Memory**
-*   **Shared Memory (Fast):**
+*   **  PBSM/Shared Memory (Fast):**
     *   A small block of memory located inside each SM.
     *   Shared only among the internal SPs of that specific SM.
 *   **Global Memory (Slow):**
@@ -44,13 +57,20 @@
 
 ## 2. Heterogeneous Computing
 
-> **Definition:** Writing a program that runs across different types of processors (e.g., CPU + GPU) is called **Heterogeneous Computing**.
+> **Definition:** An integrated computing model or system consists of different types of processors/computing unit (e.g., GPU, DSP, FPGA, ASIC, Co-processor).
 
-*   **Concept:** The system consists of a **Host** (CPU) to manage execution and a **Device** (Accelerator) for heavy computation.
+*   **Concept:** The system consists of a **Host** (CPU) to manage execution and a **Device** (Accelerator) for heavy computation.This model applies to CUDA/OpenCL systems. HSA systems do not use the Host–Device separation.
 *   **Types of Accelerators:**
     *   **GPU** (Graphics Processing Units)
     *   **FPGA** (Field Programmable Gate Arrays)
     *   **DSP** (Digital Signal Processors)
+*   **Types of Architecture:**
+    *   GPU Servers: CPU communicates with GPU through PCIe/NVLink and requires memory copies between CPU memory and GPU memory, which often becomes a bottleneck.
+    *   Heterogeneous System Architecture(HSA): 
+        *   HSA provides hardware-managed unified memory, reducing the need for OS-mediated memory copies.
+        *   Unified coherent memory.
+        *   CPU and GPU integrated on a single chip.
+        *   Example: AMD APU (Accelerated Processing Unit), originally marketed under the Fusion branding.
 
 ---
 
