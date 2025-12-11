@@ -1223,6 +1223,7 @@ structured_block
 - A **parallel region** must be a structured block that does not span multiple routines or source files.
 - It is illegal to branch (`goto`) into or out of a parallel region.
 - However, it is valid to call other functions within a parallel region.
+- OpenMP compiler don't check for dependences among iterations in a loop, so any iterations depend on other iterations cannot be parallelized by OpenMP without using feature like Tasking API.
 
 ### Parallel Region — Determining the Number of Threads
 
