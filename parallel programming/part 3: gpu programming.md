@@ -41,10 +41,17 @@
     *   Maximum number of threads per block: 1024
 
 ### Memory Hierarchy
-*   **Local Memory**
-*   **  PBSM/Shared Memory (Fast):**
+*   Registers
+    *   Automatic variables(scalar/array) inside kernels.
+    *   Data lifetime = thread lifetime.
+    *   Accessible by any thread in the threadblock.
+
+*   **Per-thread Local Memory**
+*   **Per-block- Shared Memory(Fast):**
     *   A small block of memory located inside each SM.
     *   Shared only among the internal SPs of that specific SM.
+    *   C/C++: **__shared__** int a[SIZE];
+    *   Date lifetime = block lifetime.
 *   **Global Memory (Slow):**
     *   The large on-board memory (VRAM).
     *   Accessible by all SMs on the chip but has significantly higher latency compared to shared memory.
@@ -111,8 +118,11 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 *   **Thread block** is a collection of threads run on a single SM.
 *   kernelFunc<<<numBlocks, threadsPerBlock, sharedMemSize, streamID>>>(), numBlocks at the first value in angle brackets means number of thread blocks in the grid, the second value means the numbers of number of threads per block.
 *   A grid is the collection of thread block started by a kernel.
-*   **ThreadIdx**: the rank or index of the thread in its thread block.
-*   **BlockDim**: the number of threads in a block (in x, y, z dimensions).
+*   **ThreadIdx.[x y z]**: the rank or index of the thread in its thread block.
+*   **BlockIdx.[x y z]**: block index within the grid.
+*   **BlockDim.[x y z]**: the number of threads in each block.
+*   **GridDim.[x y z]**: the number of blocks in each grid.
+*   **Index = threadIdx.x + blockIdx.x * blockDim.x**
 
 ### Development Workflow
 *   **API:** CUDA is the API for GPGPU (General-Purpose computing on Graphics Processing Units) programming.

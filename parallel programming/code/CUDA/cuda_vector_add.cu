@@ -10,25 +10,10 @@
 #include <cuda.h>
 
 __global__ void Vec_add(const float x[], const float y[], float z[], const int n) {
-    int my_elt = blockDim.x * blockIdx.x + threadIdx.x;
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
     
-    if(my_elt < n)
-        z[my_elt] = x[my_elt] + y[my_elt];
-}
-
-void Serial_vec_add (const float x[], const float y[], float cz[], const int n) {
-    for (int i=0;i<n;i++){
-        cz[i] = x[i] + y[i];
-    }
-}
-
-void init_vectors(float* x, float* y, int n, char i_g) {
-    srand(time(NULL));
-
-    for (int i = 0; i < n; i++) {
-        x[i] = (float)(rand() % 100);
-        y[i] = (float)(rand() % 100);
-    }
+    if(idx < n)
+        z[idx] = x[idx] + y[idx];
 }
 
 void Get_args(const int argc, char* argv[], int* n_p, int* blk_ct_p, int* th_per_blk_p, char* i_g){
@@ -49,14 +34,6 @@ void Get_args(const int argc, char* argv[], int* n_p, int* blk_ct_p, int* th_per
     }
 }
 
-void Allocate_vectors(float** x_p, float** y_p, float** z_p, float** cz_p, int n) {
-    cudaMallocManaged((void**)x_p, n*sizeof(float));
-    cudaMallocManaged((void**)y_p, n*sizeof(float));
-    cudaMallocManaged((void**)z_p, n*sizeof(float));
-
-    *cz_p = (float*) malloc(n*sizeof(float));
-}
-
 double Two_norm_diff(const float z[], const float cz[], const int n) {
     double diff, sum = 0.0;
 
@@ -67,14 +44,6 @@ double Two_norm_diff(const float z[], const float cz[], const int n) {
     return sqrt(sum);
 }
 
-void Free_vectors(float *x, float *y, float *z, float *cz) {
-    cudaFree(x);
-    cudaFree(y);
-    cudaFree(z);
-
-    free(cz);
-}
-
 int main(int argc, char* argv[]) {
     int n, th_per_blk, blk_ct;
     char i_g;
@@ -83,17 +52,36 @@ int main(int argc, char* argv[]) {
     double diff_norm;
 
     Get_args(argc, argv, &n, &blk_ct, &th_per_blk, &i_g);
-    Allocate_vectors(&x, &y, &z, &cz, n);
-    init_vectors(x, y, n, i_g);
+
+    cudaMallocManaged((void**)&x, n*sizeof(float));
+    cudaMallocManaged((void**)&y, n*sizeof(float));
+    cudaMallocManaged((void**)&z, n*sizeof(float));
+
+    cz = (float*) malloc(n*sizeof(float));
+
+    srand(time(NULL));
+
+    for (int i = 0; i < n; i++) {
+        x[i] = (float)(rand() % 100);
+        y[i] = (float)(rand() % 100);
+    }
 
     Vec_add <<<blk_ct, th_per_blk>>>(x, y, z, n);
     cudaDeviceSynchronize();
 
-    Serial_vec_add(x, y, cz, n);
+    for (int i=0;i<n;i++){
+        cz[i] = x[i] + y[i];
+    }
+    
     diff_norm = Two_norm_diff(z, cz, n);
     printf("Two - norm of difference between host and ");
     printf("device = %e\n", diff_norm);
 
-    Free_vectors(x, y, z, cz);
+    cudaFree(x);
+    cudaFree(y);
+    cudaFree(z);
+
+    free(cz);
+
     return 0;
 }
