@@ -22,7 +22,8 @@
 ### NVIDIA GPU Structure
 *   **Streaming Multiprocessors (SMs):**
     *   NVIDIA GPUs are composed of multiple SMs.
-    *   Each SM functions similarly to a SIMD processor.
+    *   Each SM is a vector machine, and functions similarly to a SIMD processor.
+    *   Shared register files.
 *   **Streaming Processors (SPs) / CUDA Cores:**
     *   Each SM is composed of multiple SPs.
     *   These are the individual datapaths (cores) within an SM.
@@ -105,12 +106,12 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 
 #### 2. SIMT (Single Instruction, Multiple Threads)
 *   Each thread executes the **same code instructions**.
-*   Each thread operates on **different data**.
+*   Each thread operates on **different data** based on its threadID.
 *   Differentiation is achieved via a unique **`threadID`**.
 
 #### 3. Thread Hierarchy
 *   **Thread Types:**
-    *   **Physical threads:** The actual hardware execution units.
+    *   **Physical threads:** The actual hardware execution units and context switching are essentially free.
     *   **Virtual threads:** Software abstraction (can exceed physical hardware limits).
 *   **Grouping Structure:**
     1.  **Threads** are grouped into **Thread Blocks**.
