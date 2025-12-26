@@ -124,6 +124,20 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 *   **BlockDim.[x y z]**: the number of threads in each block.
 *   **GridDim.[x y z]**: the number of blocks in each grid.
 *   **Index = threadIdx.x + blockIdx.x * blockDim.x**
+*   The index of threads and blocks can be denoted by a 3 dimensional struct, dim3 defined in vector_types.h, struct dim3 {x; y; z;};
+
+#### 4. Function Qualifiers
+
+*   __device__ : executed on the device, callable from the device only
+*   __global__ : executed on the device, callable from the host only
+*   __host__ : executed on the host, callable from the host only
+*   __host__device__ : compiled for both the host and the device.
+
+#### 5. Variable Type Qualifiers
+
+*   __device__ : resides in device's global memory space
+*   __constant__ : has the lifetime of an application is accessible from all the threads within the grid and from the host through the runtime library
+*   __shared__ : resides in the shared memory space of a thread block, has the lifetime of the block
 
 ### Development Workflow
 *   **API:** CUDA is the API for GPGPU (General-Purpose computing on Graphics Processing Units) programming.
