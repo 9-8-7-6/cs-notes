@@ -7,17 +7,17 @@
 ## 1. GPU Architecture & Multi-GPU
 
 ### GPU
-*   A specialized chip designed for rapidly display and visualization.
+*   A specialized chip designed for rapid display and visualization.
 *   Massively multithreaded manycore chips.
 
-### GPGPU(General-Purpose Graphic Processing Unit)
+### GPGPU(General-Purpose Graphics Processing Unit)
 *   Exploit data parallelism for solving embarrassingly parallel tasks and numeric computations.
 *   Programmable:
     *   Early GPGPU: using libraries in computer graphic, e.g. OpenGL or DirectX.
-    *   Now CUDA and openCL provides an extension to C and C++ enable parallel programming on GPUs.
+    *   Now CUDA and OpenCL provides an extension to C and C++ enable parallel programming on GPUs.
 
 ### NVLink
-*   Data transfor between GPUs.
+*   Data transfer between GPUs.
 
 ### NVIDIA GPU Structure
 *   **Streaming Multiprocessors (SMs):**
@@ -45,14 +45,14 @@
 *   Registers
     *   Automatic variables(scalar/array) inside kernels.
     *   Data lifetime = thread lifetime.
-    *   Accessible by any thread in the threadblock.
+    *   Accessible only by the owning thread.
 
 *   **Per-thread Local Memory**
 *   **Per-block- Shared Memory(Fast):**
     *   A small block of memory located inside each SM.
-    *   Shared only among the internal SPs of that specific SM.
+    *   Shared only among the internal cores of that specific SM.
     *   C/C++: **__shared__** int a[SIZE];
-    *   Date lifetime = block lifetime.
+    *   Data lifetime = block lifetime.
 *   **Global Memory (Slow):**
     *   The large on-board memory (VRAM).
     *   Accessible by all SMs on the chip but has significantly higher latency compared to shared memory.
@@ -117,14 +117,14 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
     1.  **Threads** are grouped into **Thread Blocks**.
     2.  A Kernel launch creates a **Grid** of thread blocks.
 *   **Thread block** is a collection of threads run on a single SM.
-*   kernelFunc<<<numBlocks, threadsPerBlock, sharedMemSize, streamID>>>(), numBlocks at the first value in angle brackets means number of thread blocks in the grid, the second value means the numbers of number of threads per block.
+*   kernelFunc<<<numBlocks, threadsPerBlock, sharedMemSize, streamID>>>();, numBlocks at the first value in angle brackets means number of thread blocks in the grid, the second value means the number of threads per block.
 *   A grid is the collection of thread block started by a kernel.
 *   **ThreadIdx.[x y z]**: the rank or index of the thread in its thread block.
 *   **BlockIdx.[x y z]**: block index within the grid.
 *   **BlockDim.[x y z]**: the number of threads in each block.
 *   **GridDim.[x y z]**: the number of blocks in each grid.
 *   **Index = threadIdx.x + blockIdx.x * blockDim.x**
-*   The index of threads and blocks can be denoted by a 3 dimensional struct, dim3 defined in vector_types.h, struct dim3 {x; y; z;};
+*   The index of threads and blocks can be denoted by a 3-dimensional struct, dim3 defined in vector_types.h, struct dim3 {x; y; z;};
 
 #### 4. Function Qualifiers
 
@@ -139,6 +139,11 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 *   __constant__ : has the lifetime of an application is accessible from all the threads within the grid and from the host through the runtime library
 *   __shared__ : resides in the shared memory space of a thread block, has the lifetime of the block
 
+#### 6. Program Compilation
+
+*   Source files containing CUDA device code must be compiled via nvcc, NVCC separates host code and device code, compiling host code with a standard C/C++ compiler and device code through the CUDA compilation pipeline.
+Device code is typically compiled in two stages: first to PTX (a virtual ISA), and then to device-specific binary code (SASS).
+
 ### Development Workflow
 *   **API:** CUDA is the API for GPGPU (General-Purpose computing on Graphics Processing Units) programming.
 *   **Dual-Code Structure:** A typical CUDA application requires writing two parts:
@@ -150,4 +155,43 @@ A **Kernel** is a function that runs on the GPU and is executed by **many concur
 
 ---
 
+### CPU & GPU Synchronization
+
+*   Most CUDA function calls are asynchronous.Control is returned to the host thread before the device has completed the request.
+*   Kernel launch, asynchronous memory copy and set options, cudaMemcpy within the same device, H2D cudaMemcpy of 64kB or less, cudaEvent functions.
+*   Programmer must enforce synchronization between GPU and CPU when data-dependent.
+
+#### Synchronization Mechanisms
+*   Device based: **cudaDeviceSynchronize()** which blocks a CPU thread until all issued CUDA calls to a device complete.
+*   Context based: **cudaThreadSynchronize() (deprecated, use cudaDeviceSynchronize)** which block a CPU thread until all issued CUDA calls from the thread complete.
+*   Stream based: **cudaStreamSynchronize(stream-id)**, block a CPU thread until all CUDA calls in stream stream-id complete.
+*   Event based: **cudaEventSynchronize (event)**,block a CPU thread until event is recorded, **cudaStreamWaitEvent(stream-id, event)**, block a GPU stream until event reports completion.
+
+#### CUDA event
+CUDA events are lightweight primitives used for synchronization and timing.
+*   Data type : cudaEvent_t
+*   Common event APIs :  cudaEventCreate(&event) , cudaEventRecord(event, stream) , cudaEventSynchronize(event) , cudaEventElapsedTime(&ms, start, end) , cudaEventDestroy(event)
+*   Error handling : cudaError_t, which should be checked to ensure correct execution.
+
+### Multi-GPUs
+
+*   Multiple CPU threads belonging to the same process
+
+#### Sharing data between GPUs
+
+*   Explicit copies via host : device A to host, host to device B
+*   Zero-copy shared host array : direct device access to host memory over PCI-e in lower bandwidth and higher latency than GPU global memory.With using cudaMemcpy, but the host memory must be pinned(page-locked) to in case pageable memory cannot be directly accessed by the GPU due to OS virtual memory mechanism.
+    *   cudaHostAlloc() : allocate pinned(page-locked) host memory for higher cudaMemcpy performance, and use with cudaMemAsync() for asynchronous memory copy or CUDA stream.
+    *   cudaMallocHost() : add the flag cudaHostAllocMapped to allocate pinned host memory or cudaHostAllocPortable to allocate shared host memory.
+*   Peer-to-peer memory copy : direct copy from pointer on GPU A to pointer on GPU B.
+
+---
+
+### Dynamic parallelism
+
+The ability to launch new grids from the GPU dynamically / simultaneously / independently
+
+---
+
 ## 4. Optimization
+
