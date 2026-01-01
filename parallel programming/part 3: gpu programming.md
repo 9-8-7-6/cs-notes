@@ -33,7 +33,11 @@
 ### Thread Level Scheduling - Warp
 *   Software: threads -> blocks -> grid
 *   Hardware: core -> SM(multicore processor) -> GPU(device)
-*   Inside an SM, threads are launched in groups of 32 called warps. Threads in a warp execute the same instruction in parallel, while warps and blocks execute logically in parallel.
+*   Inside an SM, threads are launched in groups of 32 called warps. Threads in a warp execute the same instruction physically in parallel, while warps and blocks execute logically in parallel.
+*   Warps are switched when memory stalls.
+*   Warp Divergence
+    *   Occurs when threads within the same warp follow different execution paths due to control-flow instructions(e.g., if, else, switch) with thread-dependent branch conditions.
+    *   Warp divergence does not affect different warps; it only impacts threads within the same warp.
 
 #### Thread group limits
 *   Maximum execution concurrency
@@ -189,7 +193,17 @@ CUDA events are lightweight primitives used for synchronization and timing.
 
 ### Dynamic parallelism
 
-The ability to launch new grids from the GPU dynamically / simultaneously / independently
+The ability to launch new grids from the GPU dynamically / simultaneously / independently and dynamic parallelism allows a CUDA kernel to launch other kernels directly on the GPU, without returning control to the CPU.
+
+Benefits:
+*   Move host-side control loops with dynamic or irregular workloads to the GPU.
+*   Run dynamically generated independent tasks on the GPU.
+*   Reduce CPU–GPU synchronization and host-side launch overhead
+
+Use cases:
+*   Dynamic block and grid size determination
+*   Dynamic work generation
+*   Nested Parallelism
 
 ---
 
