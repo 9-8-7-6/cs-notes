@@ -35,9 +35,47 @@
 *   Hardware: core -> SM(multicore processor) -> GPU(device)
 *   Inside an SM, threads are launched in groups of 32 called warps. Threads in a warp execute the same instruction physically in parallel, while warps and blocks execute logically in parallel.
 *   Warps are switched when memory stalls.
-*   Warp Divergence
+*   Warp Divergence : can't execute the same instruction in the same cycle in the warp
     *   Occurs when threads within the same warp follow different execution paths due to control-flow instructions(e.g., if, else, switch) with thread-dependent branch conditions.
     *   Warp divergence does not affect different warps; it only impacts threads within the same warp.
+
+```c
+__global__ void per_thread_sum
+(int *indices, float *data, float *sums) {
+    ...
+    // number of loop iterations per thread is data dependent
+    // This kernel exhibits warp divergence due to data-dependent loop bounds, causing different threads in the same warp to execute a different number of iterations.
+    int i = threadIdx.x;
+    for (int j = indices[i]; j < indices[i+1]; j++) {
+        sum += data[j];
+    }
+    sums[i] = sum;
+}
+```
+
+### Unroll the for-loop
+
+*   Unroll the statements can reduce the branches and increase the pipeline.
+
+```c
+for (i = 0; i < n; i++) {
+    a = a + i;
+}
+
+// Unrolled 3 times
+for (i = 0; i < n; i += 3) {
+    a = a + i;
+    a = a + i + 1;
+    a = a + i + 2;
+}
+```
+
+*   #pragma unroll
+```c
+#pragma unroll 5
+for (int i = 0; i < n; i++)
+// the loop will be unrolled 5 times
+```
 
 #### Thread group limits
 *   Maximum execution concurrency
@@ -47,23 +85,52 @@
 
 ### Memory Hierarchy
 *   Registers
-    *   Automatic variables(scalar/array) inside kernels.
+    *   Scalar variables declared inside kernels.
+    *   Fastest on-chip storage.
     *   Data lifetime = thread lifetime.
     *   Accessible only by the owning thread.
 
 *   **Per-thread Local Memory**
-*   **Per-block- Shared Memory(Fast):**
-    *   A small block of memory located inside each SM.
-    *   Shared only among the internal cores of that specific SM.
+    *   Per-thread private memory
+    *   Used when registers spill or for large arrays.
+*   **Per-block Shared Memory(Fast):**
+    *   Shared variables.
+    *   On-chip memory located inside each SM.
+    *   Shared among threads within the same block.
     *   C/C++: **__shared__** int a[SIZE];
     *   Data lifetime = block lifetime.
 *   **Global Memory (Slow):**
+    *   Global memory / Constant memory
     *   The large on-board memory (VRAM).
     *   Accessible by all SMs on the chip but has significantly higher latency compared to shared memory.
 
 ### Host vs. Device
 *   **Host:** The CPU and its system memory (RAM).
 *   **Device:** The GPU and its on-board memory (VRAM).
+
+#### Limit of Dynamic Allocation
+
+*   if you have multiple extern declaration of shared, extern __shared__ float As[], extern __shared__ float Bs[], both of As, Bs point to the same address.
+*   Solution: Keep As and Bs inside the 1D-array, extern __shared__ float smem[], when indexing elements in As (smem[0:sAs-1]), Bs (smem[sAs:sAs+sBs]).
+
+---
+
+#### Static Shared Memory Allocation
+
+*   If the size of shared memory is know in compilation time, shared memory can be allocated statically.
+
+```c
+__global__ void FW_APSP(int k, int D[][]) {
+    __shared__ int DS[10*10];
+    ...
+}
+```
+
+#### Constant memory
+
+*   Read only
+*   Declare by variable qualifier __constant__
+*   Each SM has its own constant memory
 
 ---
 
