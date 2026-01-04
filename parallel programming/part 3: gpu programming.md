@@ -276,3 +276,40 @@ Use cases:
 
 ## 4. Optimization
 
+### Data Pre-fetch and Reuse
+
+*   GPU has faster but smaller memory spaces, which are shared memory(L1 cache) and Register file.
+*   Hardware: prefetch data to shared memory or registers for later computation(hardware), Software/Programmer: minimize memory usage & reuse the data in shared memory or registers as many times as possible.
+
+---
+
+### Host memory
+
+#### Pined memory (Page-Locked Data Transfers)
+
+*   cudaMallocHost() -> pin logical address, GPU can directly access physical address without OS's translation.
+*   Enable highest cudaMemcpy performance.
+*   Allocating too much page-locked memory can reduce overall system(host) performance.
+
+#### Overlap CPU & GPU Computations
+
+*   To facilitate concurrent execution between host and device, some function calls are asynchronous.
+*   If the 
+
+#### CUDA Streams
+
+*   Overlap the execution of a kernel and hide data transfer delay from computations.
+*   Operations in the same stream are still serialized and executed in order.
+*   Without stream, the kernel computation can only start after the dataset is transferred, and with stream, we can partition the dataset, assign each partition to a stream and execute them in pipeline.
+
+---
+
+### Global / Local memory
+
+---
+
+### Shared memory
+
+---
+
+### Address Linearization
