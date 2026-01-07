@@ -294,7 +294,6 @@ Use cases:
 #### Overlap CPU & GPU Computations
 
 *   To facilitate concurrent execution between host and device, some function calls are asynchronous.
-*   If the 
 
 #### CUDA Streams
 
@@ -306,9 +305,28 @@ Use cases:
 
 ### Global / Local memory
 
+#### Memory coalescing
+
+*   L1 is on chip cache and share memory, L2 is off chip memory cache and global memory.
+*   Hardware detects if the threads access consecutive memory locations, hardware coalesces all memory accesses into a consolidated access(single transaction) to consetutive DRAM locations (off-chip memory)
+
+---
+
+#### Tiled algorithm
+
+*   Split the inputs into blocks to fit into shared (cache) memory to increase data reuse, minimize global memory access.
+
 ---
 
 ### Shared memory
+
+Memory is divided into banks and successive 32-bit(4 Bytes) words assigned to successive bank.\
+Multiple simultaneous accesses to a bank result in a bank conflict.\
+So conflicting access are serialized.
+
+#### Bank conflicts avoidance
+
+#### Memory padding
 
 ---
 
