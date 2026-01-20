@@ -3,27 +3,68 @@
 ## Hadoop
 
 ### Big Data
-Extracting values from an immense volume, variety and velocity of data, in context, beyond what was perviously possible.
 
-#### Problems
-*   Volume: data might scale from terabytes to petabytes to zetabytes.
-*   Variety: Manage the complexity of data in many different structures, ranging from relational to logs to raw text.
-*   Velocity: streaming data and large volume data movement. How fast to process the data.
+Extracting value from an immense **volume**, **variety**, and **velocity** of data, in context, beyond what was previously possible.
+
+### Big Data Challenges (3Vs)
+
+- **Volume**  
+  Data can scale from terabytes (TB) to petabytes (PB) to zettabytes (ZB).
+
+- **Variety**  
+  Managing diverse data structures such as relational data, logs, and raw text.
+
+- **Velocity**  
+  Handling streaming data and large-volume data movement efficiently.
 
 ---
 
 ### MapReduce
-Process PB of data per data using datacenters.\
-Program written in this functional style are automatically parallelized and executed on machines.\
-Hadoop is the open source(JAVA) implemented by Yahoo.\
-MapReduce = programming model + implementation + system architecture.\
 
-### Large-Data Problem
-*   Process a very large number of records in parallel.
-*   Map: Transform each record into intermediate key-value pairs.
-*   Shuffle & Sort: Group intermediate results by key.
-*   Reduce: Aggregate or summarize values for each key.
-*   Generate final output.
+A framework for processing petabytes of data across distributed datacenters.
+
+- Functional-style programming model  
+- Automatically parallelized and executed on clusters  
+- Hadoop is the open-source Java implementation  
+- MapReduce = Programming Model + Implementation + System Architecture
+
+### Large-Data Processing Model
+
+- **Map**: Transform records into intermediate key-value pairs  
+- **Shuffle & Sort**: Group intermediate results by key  
+- **Reduce**: Aggregate values for each key  
+- **Output**: Generate final results
+
+#### Example: Word Count
+
+**Map**
+```
+    Map(String docid, String text):
+    for each word w in text:
+    Emit(w, 1)
+```
+
+**Reduce**
+
+```
+Reduce(String term, Iterator<int> values):
+sum = 0
+for each v in values:
+sum += v
+Emit(term, sum)
+```
+
+### What Hadoop Handles
+
+- Task scheduling  
+- Data distribution  
+- Synchronization  
+- Fault tolerance  
+- Runs on a distributed file system (HDFS)
+
+---
+
+### Distributed File System
 
 ### Hadoop Eco-system
 
