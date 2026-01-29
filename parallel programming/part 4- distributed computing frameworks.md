@@ -66,6 +66,12 @@ Emit(term, sum)
 
 ### Distributed File System
 
+- GFS(Google File System) for Google's MapReduce, A distributed file system installed on top of native Linux FS
+- HDFS(Hadoop Distributed File System) for Hadoop
+HDFS: Namenode / Datanode
+Execution engine: Job/Task tracker
+
+
 ### Hadoop Eco-system
 
 ### Hadoop Programming
