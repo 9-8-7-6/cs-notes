@@ -1,7 +1,7 @@
 # Parallel Programming
 
 ## What is Parallel Computing?
-    Solve a single problem by using multiple processors (e.g., CPU cores, GPUs) working together.  
+    Cooperating to Solving problems quickly by a collection of multiple processing elements (e.g., CPU cores, GPUs).
 
 - Traditionally, programs were written for **serial computing**: one instruction at a time on a single processor.  
 - **Parallel computing** allows tasks to be divided into smaller subtasks, executed **simultaneously** to improve performance.  
